@@ -1,0 +1,10 @@
+# ignore all file types
+**.*
+
+# except python scripts
+!**.py
+
+# and following files
+!.gitignore
+!README.md
+!environment.yaml

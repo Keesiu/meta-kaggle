@@ -6,5 +6,6 @@
 
 # and following files
 !.gitignore
+!.gitkeep
 !README.md
 !environment.yaml

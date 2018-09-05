@@ -4,6 +4,7 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s %(name)s %(message)s',
+                    filename='logs/download.log',
                     datefmt='%a, %d %b %Y %H:%M:%S')
 
 def main(args):

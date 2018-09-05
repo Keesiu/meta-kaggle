@@ -1,13 +1,13 @@
 import requests, zipfile, io, os, logging, argparse
 import pandas as pd
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s %(levelname)-8s %(name)s %(message)s',
-                    filename='logs/download.log',
-                    datefmt='%a, %d %b %Y %H:%M:%S')
-
 def main(team_csv_path, output_path):
+    
+    logger = logging.getLogger(__name__)
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s %(name)-20s %(levelname)-8s %(message)s',
+                        filename='logs/download.log',
+                        datefmt='%a, %d %b %Y %H:%M:%S')
     
     team_csv = pd.read_csv(team_csv_path, low_memory=False)
     team_csv.index = team_csv.index.map(str)

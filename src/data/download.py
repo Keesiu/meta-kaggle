@@ -7,19 +7,19 @@ logging.basicConfig(level=logging.INFO,
                     filename='logs/download.log',
                     datefmt='%a, %d %b %Y %H:%M:%S')
 
-def main(args):
+def main(team_csv_path, output_path):
     
-    github_list = pd.read_csv(args.repo_list_path, low_memory=False)
-    github_list.index = github_list.index.map(str)
-    logger.info('Loaded repo list with {} entries'.format(len(github_list)))
+    team_csv = pd.read_csv(team_csv_path, low_memory=False)
+    team_csv.index = team_csv.index.map(str)
+    logger.info('Loaded repo list with {} entries'.format(len(team_csv)))
     
     # drop all entries, that don't have a repo entry
-    github_list = github_list.dropna(subset=['GithubRepoLink'])
-    logger.info('There are {} entries with a repo link'.format(len(github_list)))
+    team_csv = team_csv.dropna(subset=['GithubRepoLink'])
+    logger.info('There are {} entries with a repo link'.format(len(team_csv)))
     i = 0
-    for _, row in github_list.iterrows():
+    for _, row in team_csv.iterrows():
         # check if the folder already exists
-        final_download_path = os.path.join(args.output_path, str(row['Id']))
+        final_download_path = os.path.join(output_path, str(row['Id']))
         if os.path.exists(final_download_path):
             logger.info('Repo {} already exists'.format(str(row['Id'])))
             continue
@@ -33,14 +33,14 @@ def main(args):
             z = zipfile.ZipFile(io.BytesIO(req.content))
             z.extractall(final_download_path)
             logger.info('Sucessfully extracted {} repo'.format(row['TeamName']))
+            i += 1
         except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
             logger.error(e)
-        i += 1
         if i == 5: break
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Download and unpack Github repos from a csv file')
-    parser.add_argument('repo_list_path', help='path to the list of github repos')
+    parser.add_argument('team_csv_path', help='path to the list of github repos')
     parser.add_argument('output_path', help='path where the downloaded repos will be stored')
     args = parser.parse_args()
-    main(args)
+    main(args.team_csv_path, args.output_path)

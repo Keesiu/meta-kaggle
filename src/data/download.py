@@ -1,9 +1,11 @@
 import requests, zipfile, io, os, logging, argparse
 import pandas as pd
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s %(levelname)s %(message)s')
+                    format='%(asctime)s %(levelname)-8s %(name)s %(message)s',
+                    datefmt='%a, %d %b %Y %H:%M:%S')
+
 def main(args):
     
     github_list = pd.read_csv(args.repo_list_path, low_memory=False)

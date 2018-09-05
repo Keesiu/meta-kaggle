@@ -5,21 +5,22 @@ logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)s %(message)s')
 def main(args):
-    github_list = pd.read_csv(args.repo_list_path)
+    
+    github_list = pd.read_csv(args.repo_list_path, low_memory=False)
     github_list.index = github_list.index.map(str)
     logger.info('Loaded repo list with {} entries'.format(len(github_list)))
-
+    
     # drop all entries, that don't have a repo entry
     github_list = github_list.dropna(subset=['GithubRepoLink'])
     logger.info('There are {} entries with a repo link'.format(len(github_list)))
-
+    i = 0
     for _, row in github_list.iterrows():
         # check if the folder already exists
         final_download_path = os.path.join(args.output_path, str(row['Id']))
         if os.path.exists(final_download_path):
             logger.info('Repo {} already exists'.format(str(row['Id'])))
             continue
-
+    
         repo_url = row['GithubRepoLink']
         repo_zip_url = repo_url + '/archive/master.zip'
         try:
@@ -31,7 +32,8 @@ def main(args):
             logger.info('Sucessfully extracted {} repo'.format(row['TeamName']))
         except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
             logger.error(e)
-
+        i += 1
+        if i == 5: break
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Download and unpack Github repos from a csv file')

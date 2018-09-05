@@ -1,5 +1,6 @@
 import requests, zipfile, io, os, logging, argparse
 import pandas as pd
+from time import time
 
 def main(team_csv_path="data/raw/meta-kaggle-2016/Teams.csv", output_path="data/external/repositories"):
     
@@ -19,6 +20,7 @@ def main(team_csv_path="data/raw/meta-kaggle-2016/Teams.csv", output_path="data/
     logger.info("In Team.csv {} entries have a GithubRepoLink.".format(len(team_csv)))
     
     i = 0
+    start = time()
     for _, row in team_csv.iterrows():
         
         # skip if the current folder already exists
@@ -44,6 +46,9 @@ def main(team_csv_path="data/raw/meta-kaggle-2016/Teams.csv", output_path="data/
             logger.error("---- Download of repo {:6} {:11} Team: {:20.15} {}"
                         .format(row['Id'], 'failed.', row['TeamName']+'.', e))
         if i == 5: break
+    end = time()
+    logger.info("Time needed for downloading repos: {}"
+                .format(pd.Timedelta(seconds=end-start).round(freq='s')))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(

@@ -49,8 +49,7 @@ def main(team_csv_path = "data/raw/meta-kaggle-2016/Teams.csv",
             logger.info("---- Download of repo {:6} {:11} Team: {:20.15}"
                         .format(row['Id'], 'successful.', row['TeamName']+'.'))
             n_success += 1
-        except (requests.exceptions.RequestException,
-                requests.exceptions.HTTPError) as e:
+        except Exception as e:
             logger.error("---- Download of repo {:6} {:11} Team: {:20.15} {}"
                         .format(row['Id'], 'failed.', row['TeamName']+'.', e))
             n_error += 1

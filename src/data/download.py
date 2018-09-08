@@ -2,6 +2,7 @@ import requests, zipfile, io, os, logging, argparse
 import pandas as pd
 from time import time
 
+
 def main(team_csv_path = "data/raw/meta-kaggle-2016/Teams.csv",
          output_path = "data/external/repositories"):
     
@@ -12,6 +13,14 @@ def main(team_csv_path = "data/raw/meta-kaggle-2016/Teams.csv",
             format = "%(asctime)s %(name)-20s %(levelname)-8s %(message)s",
             filename = "logs/download.log",
             datefmt = "%a, %d %b %Y %H:%M:%S")
+    
+    # normalize paths
+    team_csv_path = os.path.normpath(team_csv_path)
+    logger.info("Path to Team.csv normalized: {}"
+                .format(team_csv_path))
+    output_path = os.path.normpath(output_path)
+    logger.info("Output path normalized: {}"
+                .format(output_path))
     
     # load Teams.csv
     team_csv = pd.read_csv(team_csv_path, low_memory=False)
@@ -59,6 +68,7 @@ def main(team_csv_path = "data/raw/meta-kaggle-2016/Teams.csv",
     time_passed = pd.Timedelta(seconds=end-start).round(freq='s')
     logger.info("Successfully downloaded {} repos from {} tries ({} errors). Time needed: {}"
                 .format(n_success, n_try, n_error, time_passed))
+
 
 if __name__ == '__main__':
     

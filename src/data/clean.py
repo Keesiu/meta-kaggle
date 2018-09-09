@@ -19,34 +19,64 @@ def main(repo_path = "data/external/repositories"):
                 .format(repo_path))
     
     start = time()
-    n_deleted = 0
-    n_error = 0
-    for dirpath, dirnames, filenames in os.walk(repo_path, topdown=True):
-        for file in filenames:
-            if file[-3:] != '.py':
-                try:
-                    os.remove(os.path.join(dirpath, file))
-                    logger.info("{:22}{}"
-                                .format("---- Successfully deleted:", os.path.join(dirpath, file)))
-                    n_deleted += 1
-                except Exception as e:
-                    logger.error("{:22}{}{}"
-                                 .format("---- Failed to delete: ", os.path.join(dirpath, file), e))
-                    n_error += 1
+    n_repos = len(os.listdir(repo_path))
+    n_deleted_files = 0
+    n_failed_files = 0
+    n_deleted_folders = 0
+    n_failed_folders = 0
+    n_deleted_repos = 0
     
+    # traverse bottom-up
+    for dirpath, dirnames, filenames in os.walk(repo_path, topdown=False):
+        # delete file if not .py file
+        for filename in filenames:
+            if filename[-3:] != '.py':
+                file_path = os.path.join(dirpath, filename)
+                try:
+                    os.remove(file_path)
+                    logger.info("{:22}{}"
+                                .format("---- Successfully deleted file:", file_path))
+                    n_deleted_files += 1
+                except Exception:
+                    logger.exception("{:22}{}"
+                                 .format("---- Failed to delete file: ", file_path))
+                    n_failed_files += 1
+        # delete empty folders
+        for dirname in dirnames:
+            path = os.path.join(dirpath, dirname)
+            if not os.listdir(path):
+                try:
+                    os.rmdir(path)
+                    logger.info(logger.info("{:22}{}"
+                                            .format("---- Successfully deleted folder:", path)))
+                    n_deleted_folders += 1
+                    if dirpath == repo_path:
+                        n_deleted_repos += 1
+                except Exception:
+                    logger.exception("{:22}{}"
+                                 .format("---- Failed to delete folder: ", dirname))
+                    n_failed_folders += 1
+
+    logger.info("Successfully deleted {} files, {} errors occurred."
+                .format(n_deleted_files, n_failed_files))
+    logger.info("Afterwards, {} empty folders were deleted, {} errors occured."
+                .format(n_deleted_folders, n_failed_folders))
+    logger.info("From {} repositories, {} were deleted, {} remaining."
+                .format(n_repos, n_deleted_repos, len(os.listdir(repo_path))))
+        
     # logging time passed
     end = time()
     time_passed = pd.Timedelta(seconds=end-start).round(freq='s')
-    logger.info("Successfully deleted {} files, {} errors occurred. Time needed: {}"
-                .format(n_deleted, n_error, time_passed))
+    logger.info("Time needed: {}"
+                .format(time_passed))
 
 
 if __name__ == '__main__':
     
     parser = argparse.ArgumentParser(
-            description="Cleans downloaded repositories by deleting all non-python files.")
+            description="Deletes all non-python files and empty folders.")
     parser.add_argument(
-            '-p', '--repo_path',
+            '-r', '--repo_path',
             default="data/external/repositories",
             help="path to downloaded repositories (default: data/external/repositories)")
     args = parser.parse_args()

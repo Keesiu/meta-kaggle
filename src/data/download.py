@@ -58,9 +58,9 @@ def main(team_csv_path = "data/raw/meta-kaggle-2016/Teams.csv",
             logger.info("---- Download of repo {:6} {:11} Team: {:20.15}"
                         .format(row['Id'], 'successful.', row['TeamName']+'.'))
             n_success += 1
-        except Exception as e:
-            logger.error("---- Download of repo {:6} {:11} Team: {:20.15} {}"
-                        .format(row['Id'], 'failed.', row['TeamName']+'.', e))
+        except Exception:
+            logger.exception("---- Download of repo {:6} {:11} Team: {:20.15}"
+                        .format(row['Id'], 'failed.', row['TeamName']+'.'))
             n_error += 1
     
     # logging time passed

@@ -13,7 +13,7 @@ def main(repo_path = "data/external/repositories", logs_path = "logs"):
     # delete all log-files
     for file in os.listdir(logs_path):
         if file[-4:] == '.log':
-            os.remove(os.path.join())
+            os.remove(os.path.join(logs_path, file))
 
 
 if __name__ == '__main__':

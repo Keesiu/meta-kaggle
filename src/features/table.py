@@ -28,14 +28,14 @@ def main(repos_path = "data/external/repositories",
             path.append(dirpath)
             temp = int(re.search('\d{5,6}', dirpath)[0])
             repo_id.append(temp)
-            logger.debug("Finished with: repo_id = {}, path = {}, file = {}"
-                         .format(temp, dirpath, filename))
+            logger.debug("Finished: repo_id = {:6}, path = ...{:54}, file = {}"
+                         .format(temp, dirpath[-50:], filename))
     
     # store into pandas Dataframe and pickle
     scripts_df = pd.DataFrame(data={'repo_id' : repo_id,
                                     'path' : path,
                                     'name' : name})
-    scripts_df.to_pickle(scripts_df_path)
+    scripts_df.to_pickle(os.path.join(scripts_df_path, 'scripts_df.pkl'))
     
     # logging time passed
     end = time()

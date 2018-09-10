@@ -30,7 +30,7 @@ def main(teams_path = "data/raw/meta-kaggle-2016/Teams.csv",
     team_csv_with_link = team_csv.dropna(subset=['GithubRepoLink'])
     n_link = len(team_csv_with_link)
     logger.info("In Team.csv from {} entries {} have a GithubRepoLink."
-                .format(n_total, n_link))
+            .format(n_total, n_link))
     
     n_try = 0
     n_success = 0
@@ -41,8 +41,8 @@ def main(teams_path = "data/raw/meta-kaggle-2016/Teams.csv",
         # skip if the current folder already exists
         repo_path = os.path.join(repos_path, str(row['Id']))
         if os.path.exists(repo_path):
-            logger.warning("---- Download of repo {:6} {:11} Team: {:20.15}"
-                        .format(row['Id'], 'skipped.', row['TeamName']+'.'))
+            logger.warning("Download of repo {:6} {:11} Team: {:20.15}"
+                    .format(row['Id'], 'skipped.', row['TeamName']+'.'))
             continue
         
         # try to download current repository
@@ -54,19 +54,21 @@ def main(teams_path = "data/raw/meta-kaggle-2016/Teams.csv",
             req.raise_for_status()
             z = zipfile.ZipFile(io.BytesIO(req.content))
             z.extractall(repo_path)
-            logger.debug("---- Download of repo {:6} {:11} Team: {:20.15}"
-                        .format(row['Id'], 'successful.', row['TeamName']+'.'))
+            logger.debug("Downloading repo {:6} successful. Team: {:20.15}."
+                    .format(row['Id'], row['TeamName']))
             n_success += 1
         except Exception:
-            logger.exception("---- Download of repo {:6} {:11} Team: {:20.15}"
-                        .format(row['Id'], 'failed.', row['TeamName']+'.'))
+            logger.exception("Downloading repo {:6} failed.     Team: {:20.15}."
+                    .format(row['Id'], row['TeamName']))
             n_error += 1
+    
+    logger.info("Successfully downloaded {} repos from {} tries ({} errors)."
+                .format(n_success, n_try, n_error))
     
     # logging time passed
     end = time()
     time_passed = pd.Timedelta(seconds=end-start).round(freq='s')
-    logger.info("Successfully downloaded {} repos from {} tries ({} errors). Time needed: {}"
-                .format(n_success, n_try, n_error, time_passed))
+    logger.info("Time needed: {}".format(time_passed))
 
 
 if __name__ == '__main__':

@@ -34,12 +34,12 @@ def main(repos_path = "data/external/repositories"):
                 file_path = os.path.join(dirpath, filename)
                 try:
                     os.remove(file_path)
-                    logger.debug("{:30}{}"
-                            .format("Successfully deleted file: ", file_path))
+                    logger.debug("Successfully deleted file: {}"
+                                 .format(file_path))
                     n_deleted_files += 1
                 except Exception:
-                    logger.exception("{:30}{}"
-                            .format("Failed to delete file: ", file_path))
+                    logger.exception("Failed to delete file:     {}"
+                                     .format(file_path))
                     n_failed_files += 1
         # delete empty folders
         for dirname in dirnames:
@@ -47,22 +47,22 @@ def main(repos_path = "data/external/repositories"):
             if not os.listdir(path):
                 try:
                     os.rmdir(path)
-                    logger.debug(logger.info("{:30}{}"
-                            .format("Successfully deleted folder: ", path)))
+                    logger.debug(logger.info("Successfully deleted folder: {}"
+                                             .format(path)))
                     n_deleted_folders += 1
                     if dirpath == repos_path:
                         n_deleted_repos += 1
                 except Exception:
-                    logger.exception("{:30}{}"
-                            .format("Failed to delete folder: ", path))
+                    logger.exception("Failed to delete folder:     {}"
+                                     .format(path))
                     n_failed_folders += 1
 
     logger.info("Successfully deleted {} files, {} errors occurred."
-            .format(n_deleted_files, n_failed_files))
+                .format(n_deleted_files, n_failed_files))
     logger.info("Afterwards, {} empty folders were deleted, {} errors occured."
-            .format(n_deleted_folders, n_failed_folders))
+                .format(n_deleted_folders, n_failed_folders))
     logger.info("From {} repositories, {} were deleted, {} remaining."
-            .format(n_repos, n_deleted_repos, len(os.listdir(repos_path))))
+                .format(n_repos, n_deleted_repos, len(os.listdir(repos_path))))
         
     # logging time passed
     end = time()

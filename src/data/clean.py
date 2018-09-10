@@ -74,7 +74,7 @@ if __name__ == '__main__':
     
     # configure logging
     logging.basicConfig(
-        level = logging.INFO,
+        level = logging.DEBUG,
         format = "%(asctime)s %(name)-20s %(levelname)-8s %(message)s",
         filename = "logs/clean.log",
         datefmt = "%a, %d %b %Y %H:%M:%S")

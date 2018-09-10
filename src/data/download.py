@@ -11,10 +11,10 @@ def main(teams_path = "data/raw/meta-kaggle-2016/Teams.csv",
     
     # normalize paths
     teams_path = os.path.normpath(teams_path)
-    logger.info("Path to Team.csv normalized: {}"
+    logger.debug("Path to Team.csv normalized: {}"
                 .format(teams_path))
     repos_path = os.path.normpath(repos_path)
-    logger.info("Path to repositories normalized: {}"
+    logger.debug("Path to repositories normalized: {}"
                 .format(repos_path))
     
     # load Teams.csv

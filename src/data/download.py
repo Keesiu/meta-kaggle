@@ -6,6 +6,12 @@ from time import time
 def main(teams_path = "data/raw/meta-kaggle-2016/Teams.csv",
          repos_path = "data/external/repositories"):
     
+    """Downloads the available repositories from Teams.csv.
+    
+    Iterates GithubRepoLink column of Teams.csv and downloads the master branch
+    if available. Folders already existing on <repos_path> are skipped.
+    """
+    
     # logging
     logger = logging.getLogger(__name__)
     

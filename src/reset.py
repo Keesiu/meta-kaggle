@@ -3,6 +3,12 @@ import os, shutil, argparse
 
 def main(repos_path = "data/external/repositories", logs_path = "logs"):
     
+    """Resets project for clean re-run.
+    
+    Deletes all downloaded repsitories in <repos_path>.
+    Also, deletes all '.log' files in folder <logs_path>.
+    """
+    
     # normalize path
     repos_path = os.path.normpath(repos_path)
     

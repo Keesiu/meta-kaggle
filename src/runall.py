@@ -11,6 +11,11 @@ from src.data import clean
 
 def main(teams_path, repos_path):
     
+    """Runs everything.
+    
+    Downloads external data from Teams.csv and cleans it.
+    """
+    
     # download Github repositories from Team.csv to data/external/repositories
     logging.info("Starting download.py.")
     download.main(teams_path, repos_path)

@@ -5,6 +5,12 @@ from time import time
 
 def main(repos_path = "data/external/repositories"):
     
+    """Cleans the downloaded repositories.
+    
+    First, traverses all files and delete those not ending on '.py'.
+    Then, deletes all empty folders, also empty repository folders.
+    """
+    
     # logging
     logger = logging.getLogger(__name__)
     

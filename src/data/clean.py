@@ -10,8 +10,7 @@ def main(repos_path = "data/external/repositories"):
     
     # normalize path
     repos_path = os.path.normpath(repos_path)
-    logger.debug("Path to repositories normalized: {}"
-                .format(repos_path))
+    logger.debug("Path to repositories normalized: {}".format(repos_path))
     
     start = time()
     n_repos = len(os.listdir(repos_path))

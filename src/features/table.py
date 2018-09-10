@@ -28,19 +28,36 @@ def main(repos_path = "data/external/repositories",
             path.append(dirpath)
             temp = int(re.search('\d{5,6}', dirpath)[0])
             repo_id.append(temp)
-            logger.debug("Finished: repo_id = {:6}, path = ...{:54}, file = {}"
+            logger.debug("Tracked: repo_id = {:6}, path = ...{:54} file = {}."
                          .format(temp, dirpath[-50:], filename))
+    logger.info("Tracked {} files.".format(len(name)))
+    
+    # read content
+    content = []
+    for i in range(len(name)):
+        try:
+            f_path = os.path.join(path[i], name[i])
+            with open(f_path) as f:
+                temp = f.read()
+            logger.debug("Successfully opened file: {}.".format(f_path))
+        except Exception:
+            logger.exception("Failed to open file:  {}.".format(f_path))
+        content.append(temp)
     
     # store into pandas Dataframe and pickle
     scripts_df = pd.DataFrame(data={'repo_id' : repo_id,
                                     'path' : path,
-                                    'name' : name})
+                                    'name' : name,
+                                    'content' : content})
+    logger.info("Created script_df.")
     scripts_df.to_pickle(os.path.join(scripts_df_path, 'scripts_df.pkl'))
+    logger.info("Saved script_df to {}."
+                .format(os.path.join(scripts_df_path, 'scripts_df.pkl')))
     
     # logging time passed
     end = time()
     time_passed = pd.Timedelta(seconds=end-start).round(freq='s')
-    logger.info("Time needed: {}".format(time_passed))
+    logger.info("Time needed to table the scripts: {}".format(time_passed))
 
 
 if __name__ == '__main__':

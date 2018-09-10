@@ -7,6 +7,7 @@ if '' not in sys.path:
 
 from src.data import download
 from src.data import clean
+from src.features import table
 
 
 def main(teams_path, repos_path):
@@ -25,6 +26,11 @@ def main(teams_path, repos_path):
     logging.info("Starting clean.py.")
     clean.main(repos_path)
     logging.info("Finished clean.py.")
+    
+    # tables the external scripts in a DataFrame
+    logging.info("Starting table.py.")
+    table.main(repos_path)
+    logging.info("Finished table.py.")
 
 
 if __name__ == '__main__':

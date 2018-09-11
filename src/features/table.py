@@ -4,11 +4,11 @@ from time import time
 
 
 def main(repos_path = "data/external/repositories",
-         scripts_df_path = "data/interim"):
+         interim_path = "data/interim"):
     
-    """Tables all external python scripts in a Pandas DataFrame scripts_df.
+    """Tables external python scripts and their content in scripts_df.
     
-    DataFrame scripts_df has 4 columns:
+    scripts_df is a pandas DataFrame with 4 columns:
     repo_id: the respective repository ID of the script from Team.csv
     path: path to the script file
     name: name to the script file
@@ -20,8 +20,8 @@ def main(repos_path = "data/external/repositories",
     # normalize path
     repos_path = os.path.normpath(repos_path)
     logger.debug("Path to repositories normalized: {}".format(repos_path))
-    scripts_df_path = os.path.normpath(scripts_df_path)
-    logger.debug("Path to scripts_df normalized: {}".format(scripts_df_path))
+    interim_path = os.path.normpath(interim_path)
+    logger.debug("Path to iterim data normalized: {}".format(interim_path))
     
     # traverse and list all files
     start = time()
@@ -56,9 +56,9 @@ def main(repos_path = "data/external/repositories",
                                     'name' : name,
                                     'content' : content})
     logger.info("Created script_df.")
-    scripts_df.to_pickle(os.path.join(scripts_df_path, 'scripts_df.pkl'))
+    scripts_df.to_pickle(os.path.join(interim_path, 'scripts_df.pkl'))
     logger.info("Saved script_df to {}."
-                .format(os.path.join(scripts_df_path, 'scripts_df.pkl')))
+                .format(os.path.join(interim_path, 'scripts_df.pkl')))
     
     # logging time passed
     end = time()
@@ -77,16 +77,16 @@ if __name__ == '__main__':
     
     # parse arguments
     parser = argparse.ArgumentParser(
-            description = "Tables all python scripts in a Pandas DataFrame.")
+            description = "Tables external python scripts and their content in scripts_df.")
     parser.add_argument(
             '-r', '--repos_path',
             default = "data/external/repositories",
             help = "path to downloaded repositories (default: data/external/repositories)")
     parser.add_argument(
-            '-s', '--scripts_path',
+            '-i', '--interim_path',
             default = "data/interim",
-            help = "path to downloaded repositories (default: data/interim)")
+            help = "path to store the output scripts_df.pkl (default: data/interim)")
     args = parser.parse_args()
     
     # run main
-    main(args.repos_path, args.scripts_path)
+    main(args.repos_path, args.interim_path)

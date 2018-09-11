@@ -5,33 +5,36 @@ import sys, logging, argparse
 if '' not in sys.path:
     sys.path.insert(0, '')
 
-from src.data import download
-from src.data import clean
-from src.features import table
+from src.data import download, clean
+from src.features import table, extract
 
 
-def main(teams_path, repos_path):
+def main(teams_path, repos_path, interim_path):
     
     """Runs everything.
     
     Downloads external data from Teams.csv and cleans it.
     """
     
-    # download Github repositories from Team.csv to data/external/repositories
+    # downloads Github repositories from Team.csv to data/external/repositories
     logging.info("Starting download.py.")
     download.main(teams_path, repos_path)
     logging.info("Finished download.py.")
     
-    # clean Github repositories by deleting every non-Python file
+    # cleans Github repositories by deleting every non-Python file
     logging.info("Starting clean.py.")
     clean.main(repos_path)
     logging.info("Finished clean.py.")
     
-    # tables the external scripts in a DataFrame
+    # tables the external scripts and their content to scripts_df
     logging.info("Starting table.py.")
-    table.main(repos_path)
+    table.main(repos_path, interim_path)
     logging.info("Finished table.py.")
-
+    
+    # extracts source code metrics from script content to features_df
+    logging.info("Starting extract.py.")
+    extract.main(interim_path)
+    logging.info("Finished extract.py.")
 
 if __name__ == '__main__':
     
@@ -53,7 +56,11 @@ if __name__ == '__main__':
             '-r', '--repos_path',
             default = "data/external/repositories",
             help = "path to store downloaded repositories (default: data/external/repositories)")
+    parser.add_argument(
+            '-i', '--interim_path',
+            default = "data/interim",
+            help = "path to store the output features_df.pkl (default: data/interim)")
     args = parser.parse_args()
     
     # run main
-    main(args.teams_path, args.repos_path)
+    main(args.teams_path, args.repos_path, args.interim_path)

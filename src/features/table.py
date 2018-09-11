@@ -6,7 +6,13 @@ from time import time
 def main(repos_path = "data/external/repositories",
          scripts_df_path = "data/interim"):
     
-    """Tables all external python scripts in a Pandas DataFrame scripts_df."""
+    """Tables all external python scripts in a Pandas DataFrame scripts_df.
+    
+    DataFrame scripts_df has 4 columns:
+    repo_id: the respective repository ID of the script from Team.csv
+    path: path to the script file
+    name: name to the script file
+    content: context of that script file as string"""
     
     # logging
     logger = logging.getLogger(__name__)

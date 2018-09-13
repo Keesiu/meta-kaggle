@@ -2,7 +2,7 @@ import os, logging, argparse
 import pandas as pd
 import numpy as np
 from time import time
-import radon.raw
+import radon.raw, radon.complexity, radon.metrics
 
 
 def main(interim_path = "data/interim"):
@@ -24,12 +24,17 @@ def main(interim_path = "data/interim"):
 
     # start extracting source code metrics
     start = time()
+    n = len(features_df)
     
     # length of content
-    features_df['content_len'] = scripts_df['content'].map(len)
+    features_df['content_len'] = scripts_df.content.map(len)
+    logger.info("Extracted content length 'content_len'.")
     
     # radon raw metrics
-    radon_raw = [try_radon_raw(scripts_df['content'], index, logger) for index in scripts_df.index]
+    logger.info("Start extracting radon raw metrics.")
+    # extraction
+    radon_raw = [try_radon_raw(scripts_df.content, index, logger) for index in scripts_df.index]
+    # save results to features_df
     (features_df['radon_raw_loc'],
      features_df['radon_raw_lloc'],
      features_df['radon_raw_sloc'],
@@ -37,12 +42,55 @@ def main(interim_path = "data/interim"):
      features_df['radon_raw_multi'],
      features_df['radon_raw_blank'],
      features_df['radon_raw_single_comments']) = zip(*radon_raw)
-    n_radon_raw_error = features_df['radon_raw_loc'].isna().sum()
-    n_radon_raw_success = sum(features_df['radon_raw_loc'] >= 0)
+    # set is_error flag
+    features_df['radon_raw_is_error'] = features_df.radon_raw_loc.isna()
+    # logging results
+    n_radon_raw_error = features_df.radon_raw_is_error.sum()
+    n_radon_raw_success = sum(features_df.radon_raw_loc >= 0)
     logger.info("Extracted radon raw metrics: {} scripts, {} successes, {} errors."
-                .format(len(scripts_df['content']), n_radon_raw_success, n_radon_raw_error))
+                .format(n, n_radon_raw_success, n_radon_raw_error))
     
-    # store features
+    # radon cyclomatic complexity metrics
+    logger.info("Start extracting radon cyclomatic complexity metrics.")
+    # extraction
+    radon_cc = [try_radon_cc(scripts_df.content, index, logger) for index in scripts_df.index]
+    # save results to features_df
+    features_df['radon_avg_cc'] = list(map(radon.complexity.average_complexity, radon_cc))
+    features_df['radon_sum_cc'] = [sum([obj.complexity for obj in blocks]) for blocks in radon_cc]
+    # set is_error flag
+    features_df['radon_cc_is_error'] = [isinstance(x, str) for x in radon_cc]
+    # logging results
+    n_radon_cc_error = sum(features_df.radon_cc_is_error)
+    n_radon_cc_success = sum([isinstance(x, list) for x in radon_cc])
+    logger.info("Extracted radon cyclomatic complexity metrics: {} scripts, {} successes, {} errors."
+                .format(n, n_radon_cc_success, n_radon_cc_error))
+    
+    # radon halstead metrics
+    logger.info("Start extracting radon halstead metrics.")
+    # extraction
+    radon_h = [try_radon_h(scripts_df.content, index, logger) for index in scripts_df.index]
+    # save results to features_df
+    (features_df['radon_h_h1'],
+     features_df['radon_h_h2'],
+     features_df['radon_h_N1'],
+     features_df['radon_h_N2'],
+     features_df['radon_h_vocabulary'],
+     features_df['radon_h_length'],
+     features_df['radon_h_calculated_length'],
+     features_df['radon_h_volume'],
+     features_df['radon_h_difficulty'],
+     features_df['radon_h_effort'],
+     features_df['radon_h_time'],
+     features_df['radon_h_bugs']) = zip(*radon_h)
+    # set is_error flag
+    features_df['radon_h_is_error'] = features_df.radon_h_h1.isna()
+    # logging results
+    n_radon_h_error = features_df.radon_h_is_error.sum()
+    n_radon_h_success = sum(features_df.radon_h_h1 >= 0)
+    logger.info("Extracted radon halstead metrics: {} scripts, {} successes, {} errors."
+                .format(n, n_radon_h_success, n_radon_h_error))
+    
+    # export features_df as pickle file to interim folder
     features_df.to_pickle(os.path.join(interim_path, 'features_df.pkl'))
     logger.info("Saved script_df to {}."
                 .format(os.path.join(interim_path, 'features_df.pkl')))
@@ -54,6 +102,10 @@ def main(interim_path = "data/interim"):
 
 
 def try_radon_raw(series, index, logger):
+    """Tries to extract radon raw metrics.
+    
+    Input: pandas series of content, index of row to analyze content
+    Output: list of seven metrics: [loc, lloc, sloc, comments, multi, blank]"""
     try:
         result = radon.raw.analyze(series[index])
         logger.debug("Successfully extracted radon raw metrics of file {}."
@@ -63,6 +115,39 @@ def try_radon_raw(series, index, logger):
         logger.exception("Failed to extract radon raw metrics of file      {}."
                      .format(index))
         return [np.nan]*7
+
+
+def try_radon_cc(series, index, logger):
+    """Tries to extract radon cyclomatic complexity metrics.
+    
+    Input: pandas series of content, index of row to analyze content
+    Output: list of blocks, which are either function, class, or method"""
+    try:
+        result = radon.complexity.cc_visit(series[index])
+        logger.debug("Successfully extracted radon cyclometric complexity metrics of file {}."
+                     .format(index))
+        return result
+    except:
+        logger.exception("Failed to extract cyclometric complexity metrics of file            {}."
+                     .format(index))
+        return ''
+
+
+def try_radon_h(series, index, logger):
+    """Tries to extract radon halstead metrics.
+    
+    Input: pandas series of content, index of row to analyze content
+    Output: list of 12 metrics: [h1, h2, N1, N2, vocuabulary, length, 
+            calculated_length, volume, difficulty, effort, time, bugs]"""
+    try:
+        result = radon.metrics.h_visit(series[index])
+        logger.debug("Successfully extracted radon halstead metrics of file {}."
+                     .format(index))
+        return list(result)
+    except:
+        logger.exception("Failed to extract radon halstead metrics of file      {}."
+                     .format(index))
+        return [np.nan]*12
 
 
 if __name__ == '__main__':

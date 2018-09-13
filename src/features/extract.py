@@ -7,7 +7,16 @@ import radon.raw, radon.complexity, radon.metrics
 
 def main(interim_path = "data/interim"):
     
-    """Extracts all features from scripts_df and saves it in features_df."""
+    """Extracts all features from scripts_df and saves it in features_df.
+    
+    Includes:
+        Radon:
+        - Raw metrics
+        - Cyclomatic Complexity metrics
+        - Halstead Metrics
+        - Maintainability Index metric
+    Every metric type has a flag column <metric type>_is_error indicating
+    if an error occurred while trying to extract the respective metrics."""
     
     # logging
     logger = logging.getLogger(__name__)
@@ -90,6 +99,20 @@ def main(interim_path = "data/interim"):
     logger.info("Extracted radon halstead metrics: {} scripts, {} successes, {} errors."
                 .format(n, n_radon_h_success, n_radon_h_error))
     
+    # radon maintainability index metric
+    logger.info("Start extracting radon maintainability index metric.")
+    # extraction
+    radon_mi = [try_radon_mi(scripts_df.content, index, logger) for index in scripts_df.index]
+    # save results to features_df
+    features_df['radon_mi'] = radon_mi
+    #set is_error flag
+    features_df['radon_mi_is_error'] = features_df.radon_mi.isna()
+    # logging results
+    n_radon_mi_error = features_df.radon_mi_is_error.sum()
+    n_radon_mi_success = sum(features_df.radon_mi >= 0)
+    logger.info("Extracted radon maintainability index metric: {} scripts, {} successes, {} errors."
+                .format(n, n_radon_mi_success, n_radon_mi_error))
+    
     # export features_df as pickle file to interim folder
     features_df.to_pickle(os.path.join(interim_path, 'features_df.pkl'))
     logger.info("Saved script_df to {}."
@@ -128,7 +151,7 @@ def try_radon_cc(series, index, logger):
                      .format(index))
         return result
     except:
-        logger.exception("Failed to extract cyclometric complexity metrics of file            {}."
+        logger.exception("Failed to extract radon cyclometric complexity metrics of file      {}."
                      .format(index))
         return ''
 
@@ -148,6 +171,22 @@ def try_radon_h(series, index, logger):
         logger.exception("Failed to extract radon halstead metrics of file      {}."
                      .format(index))
         return [np.nan]*12
+
+
+def try_radon_mi(series, index, logger):
+    """Tries to extract radon maintainability index metric.
+    
+    Input: pandas series of content, index of row to analyze content
+    Output: maintainability index metric"""
+    try:
+        result = radon.metrics.mi_visit(series[index], True)
+        logger.debug("Successfully extracted radon maintainability index metric of file {}."
+                     .format(index))
+        return result
+    except:
+        logger.exception("Failed to extract radon maintainability index metric of file      {}."
+                     .format(index))
+        return np.nan
 
 
 if __name__ == '__main__':

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import sys, logging, argparse
 
 # forces import statement to also search in cwd (should be .../meta-kaggle)

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import requests, zipfile, io, os, logging, argparse
 import pandas as pd
 from time import time

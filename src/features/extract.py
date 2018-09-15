@@ -1,9 +1,11 @@
-import os, logging, argparse
+# -*- coding: utf-8 -*-
+
+import os, logging, argparse, re
 import pandas as pd
 import numpy as np
 from time import time
 import radon.raw, radon.complexity, radon.metrics
-
+import subprocess
 
 def main(interim_path = "data/interim"):
     
@@ -113,6 +115,12 @@ def main(interim_path = "data/interim"):
     logger.info("Extracted radon maintainability index metric: {} scripts, {} successes, {} errors."
                 .format(n, n_radon_mi_success, n_radon_mi_error))
     
+    # pylint
+    
+
+        
+    
+    
     # export features_df as pickle file to interim folder
     features_df.to_pickle(os.path.join(interim_path, 'features_df.pkl'))
     logger.info("Saved script_df to {}."
@@ -134,7 +142,7 @@ def try_radon_raw(series, index, logger):
         logger.debug("Successfully extracted radon raw metrics of file {}."
                      .format(index))
         return list(result)
-    except:
+    except Exception:
         logger.exception("Failed to extract radon raw metrics of file      {}."
                      .format(index))
         return [np.nan]*7
@@ -150,7 +158,7 @@ def try_radon_cc(series, index, logger):
         logger.debug("Successfully extracted radon cyclometric complexity metrics of file {}."
                      .format(index))
         return result
-    except:
+    except Exception:
         logger.exception("Failed to extract radon cyclometric complexity metrics of file      {}."
                      .format(index))
         return ''
@@ -167,7 +175,7 @@ def try_radon_h(series, index, logger):
         logger.debug("Successfully extracted radon halstead metrics of file {}."
                      .format(index))
         return list(result)
-    except:
+    except Exception:
         logger.exception("Failed to extract radon halstead metrics of file      {}."
                      .format(index))
         return [np.nan]*12
@@ -183,11 +191,33 @@ def try_radon_mi(series, index, logger):
         logger.debug("Successfully extracted radon maintainability index metric of file {}."
                      .format(index))
         return result
-    except:
+    except Exception:
         logger.exception("Failed to extract radon maintainability index metric of file      {}."
                      .format(index))
         return np.nan
 
+def try_pylint(df, index, logger):
+    """Tries to extract pylint metrics.
+    
+    Input: pandas DataFrame of content, index of row to analyze content
+    Output: list of pylint metrics: []"""
+    args = ['pylint', df.name[index], '--reports=y']
+    cwd = df.path[index]
+    try:
+        stdout = subprocess.check_output(args, cwd=cwd)
+        logger.debug("Successfully extracted pylint metrics of file {}."
+                     .format(index))
+    except subprocess.CalledProcessError as e:
+        # see https://stackoverflow.com/questions/49100806/pylint-and-subprocess-run-returning-exit-status-28
+        stdout = e.output
+        logger.debug("Successfully extracted pylint metrics of file {} (with non-zero exit status: {})."
+                     .format(index, e.returncode))
+    except Exception:
+        logger.exception("Failed to extract pylint metrics of file      {}."
+                     .format(index))
+        return []
+    pattern = '\n|[-a-z]+\s*|\d+\s*|'
+    
 
 if __name__ == '__main__':
     

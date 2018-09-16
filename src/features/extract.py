@@ -4,9 +4,11 @@ import os, logging, argparse, re
 import pandas as pd
 import numpy as np
 from time import time
+import collections
 import radon.raw, radon.complexity, radon.metrics
 import subprocess
 
+#%% define main function which performs whole extraction
 def main(interim_path = "data/interim"):
     
     """Extracts all features from scripts_df and saves it in features_df.
@@ -37,11 +39,11 @@ def main(interim_path = "data/interim"):
     start = time()
     n = len(features_df)
     
-    # length of content
+    #%% length of content
     features_df['content_len'] = scripts_df.content.map(len)
     logger.info("Extracted content length 'content_len'.")
     
-    # radon raw metrics
+    #%% radon raw metrics
     logger.info("Start extracting radon raw metrics.")
     # extraction
     radon_raw = [try_radon_raw(scripts_df.content, index, logger) for index in scripts_df.index]
@@ -61,7 +63,7 @@ def main(interim_path = "data/interim"):
     logger.info("Extracted radon raw metrics: {} scripts, {} successes, {} errors."
                 .format(n, n_radon_raw_success, n_radon_raw_error))
     
-    # radon cyclomatic complexity metrics
+    #%% radon cyclomatic complexity metrics
     logger.info("Start extracting radon cyclomatic complexity metrics.")
     # extraction
     radon_cc = [try_radon_cc(scripts_df.content, index, logger) for index in scripts_df.index]
@@ -76,7 +78,7 @@ def main(interim_path = "data/interim"):
     logger.info("Extracted radon cyclomatic complexity metrics: {} scripts, {} successes, {} errors."
                 .format(n, n_radon_cc_success, n_radon_cc_error))
     
-    # radon halstead metrics
+    #%% radon halstead metrics
     logger.info("Start extracting radon halstead metrics.")
     # extraction
     radon_h = [try_radon_h(scripts_df.content, index, logger) for index in scripts_df.index]
@@ -101,7 +103,7 @@ def main(interim_path = "data/interim"):
     logger.info("Extracted radon halstead metrics: {} scripts, {} successes, {} errors."
                 .format(n, n_radon_h_success, n_radon_h_error))
     
-    # radon maintainability index metric
+    #%% radon maintainability index metric
     logger.info("Start extracting radon maintainability index metric.")
     # extraction
     radon_mi = [try_radon_mi(scripts_df.content, index, logger) for index in scripts_df.index]
@@ -115,22 +117,37 @@ def main(interim_path = "data/interim"):
     logger.info("Extracted radon maintainability index metric: {} scripts, {} successes, {} errors."
                 .format(n, n_radon_mi_success, n_radon_mi_error))
     
-    # pylint
+    #%% pylint
+    logger.info("Start extracting pylint metrics.")
+    # extraction
+    counters = [try_pylint(scripts_df, index, logger) for index in scripts_df.index]
+    pylint = pd.DataFrame(counters)
+    # drop 'percent duplicated lines', already have 'nb duplicated lines'
+    pylint.drop(columns='percent duplicated lines', inplace=True)
+    # align column naming
+    pylint.rename(lambda x: "pylint_" + x.replace('-', '_').replace(' ', '_'),
+                axis = 1, inplace=True)
+    # save results to features_df
+    features_df = pd.concat([features_df, pylint], axis=1)
+    #set is_error flag
+    features_df['pylint_is_error'] = [counter == collections.Counter() for counter in counters]
+    # logging results
+    n_radon_pylint_error = features_df.pylint_is_error.sum()
+    n_radon_pylint_success = n-n_radon_pylint_error
+    logger.info("Extracted pylint metrics: {} scripts, {} successes, {} errors."
+                .format(n, n_radon_pylint_success, n_radon_pylint_error))
     
-
-        
-    
-    
-    # export features_df as pickle file to interim folder
+    #%% export features_df as pickle file to interim folder
     features_df.to_pickle(os.path.join(interim_path, 'features_df.pkl'))
     logger.info("Saved script_df to {}."
                 .format(os.path.join(interim_path, 'features_df.pkl')))
     
-    # logging time passed
+    #%% logging time passed
     end = time()
     time_passed = pd.Timedelta(seconds=end-start).round(freq='s')
     logger.info("Time needed to extract the features: {}".format(time_passed))
 
+#%% define some helper functions which tries to extract the code metrics
 
 def try_radon_raw(series, index, logger):
     """Tries to extract radon raw metrics.
@@ -147,7 +164,6 @@ def try_radon_raw(series, index, logger):
                      .format(index))
         return [np.nan]*7
 
-
 def try_radon_cc(series, index, logger):
     """Tries to extract radon cyclomatic complexity metrics.
     
@@ -162,7 +178,6 @@ def try_radon_cc(series, index, logger):
         logger.exception("Failed to extract radon cyclometric complexity metrics of file      {}."
                      .format(index))
         return ''
-
 
 def try_radon_h(series, index, logger):
     """Tries to extract radon halstead metrics.
@@ -179,7 +194,6 @@ def try_radon_h(series, index, logger):
         logger.exception("Failed to extract radon halstead metrics of file      {}."
                      .format(index))
         return [np.nan]*12
-
 
 def try_radon_mi(series, index, logger):
     """Tries to extract radon maintainability index metric.
@@ -200,25 +214,33 @@ def try_pylint(df, index, logger):
     """Tries to extract pylint metrics.
     
     Input: pandas DataFrame of content, index of row to analyze content
-    Output: list of pylint metrics: []"""
+    Output: Counter object from collections package with pylint metrics"""
     args = ['pylint', df.name[index], '--reports=y']
     cwd = df.path[index]
+    # tries to perform pylint on respective file
     try:
-        stdout = subprocess.check_output(args, cwd=cwd)
+        stdout = subprocess.check_output(args, cwd=cwd).decode('utf-8')
         logger.debug("Successfully extracted pylint metrics of file {}."
                      .format(index))
+    # may result in non-zero return code, see:
+    # https://stackoverflow.com/questions/49100806/pylint-and-subprocess-run-returning-exit-status-28
     except subprocess.CalledProcessError as e:
-        # see https://stackoverflow.com/questions/49100806/pylint-and-subprocess-run-returning-exit-status-28
-        stdout = e.output
+        stdout = e.output.decode('utf-8')
         logger.debug("Successfully extracted pylint metrics of file {} (with non-zero exit status: {})."
                      .format(index, e.returncode))
     except Exception:
         logger.exception("Failed to extract pylint metrics of file      {}."
                      .format(index))
-        return []
-    pattern = '\n|[-a-z]+\s*|\d+\s*|'
-    
+        return collections.Counter()
+    # define pattern for pylint output: "|<name>    |<count>      |"
+    pattern = "^\|(?P<name>[a-z][-\sa-z]+[a-z])\s*\|(?P<count>\d+)\s*\|"
+    # match pattern and extracts list of 2-tuples: (<name>, <count>)
+    matches = re.findall(pattern, stdout, flags=re.MULTILINE)
+    # convert list of matches to Counter object
+    counter = collections.Counter({name:int(count) for name, count in matches})
+    return counter
 
+#%%
 if __name__ == '__main__':
     
     # configure logging

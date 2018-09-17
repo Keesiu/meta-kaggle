@@ -11,7 +11,7 @@ from src.data import download, clean
 from src.features import table, extract
 
 
-def main(teams_path, repos_path, interim_path):
+def main(metadata_path, repos_path, interim_path):
     
     """Runs everything.
     
@@ -20,7 +20,7 @@ def main(teams_path, repos_path, interim_path):
     
     # downloads Github repositories from Team.csv to data/external/repositories
     logging.info("Starting download.py.")
-    download.main(teams_path, repos_path)
+    download.main(metadata_path, repos_path)
     logging.info("Finished download.py.")
     
     # cleans Github repositories by deleting every non-Python file
@@ -51,9 +51,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
             description = "Runs everything.")
     parser.add_argument(
-            '-t', '--teams_path',
-            default = "data/raw/meta-kaggle-2016/Teams.csv",
-            help = "path to Teams.csv (default: data/raw/meta-kaggle-2016/Teams.csv)")
+            '-m', '--metadata_path',
+            default = "data/raw/meta-kaggle-2016",
+            help = "path to Kaggle Meta Dataset 2016, where Teams.csv is (default: data/raw/meta-kaggle-2016)")
     parser.add_argument(
             '-r', '--repos_path',
             default = "data/external/repositories",
@@ -65,4 +65,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     # run main
-    main(args.teams_path, args.repos_path, args.interim_path)
+    main(args.metadata_path, args.repos_path, args.interim_path)

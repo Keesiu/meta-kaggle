@@ -5,7 +5,7 @@ import pandas as pd
 from time import time
 
 
-def main(teams_path = "data/raw/meta-kaggle-2016/Teams.csv",
+def main(metadata_path = "data/raw/meta-kaggle-2016",
          repos_path = "data/external/repositories"):
     
     """Downloads the available repositories from Teams.csv.
@@ -18,7 +18,7 @@ def main(teams_path = "data/raw/meta-kaggle-2016/Teams.csv",
     logger = logging.getLogger(__name__)
     
     # normalize paths
-    teams_path = os.path.normpath(teams_path)
+    teams_path = os.path.normpath(os.path.join(metadata_path, 'Teams.csv'))
     logger.debug("Path to Team.csv normalized: {}".format(teams_path))
     repos_path = os.path.normpath(repos_path)
     logger.debug("Path to repositories normalized: {}".format(repos_path))
@@ -86,9 +86,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
             description = "Downloads available Github repositories from Team.csv.")
     parser.add_argument(
-            '-t', '--teams_path',
-            default = "data/raw/meta-kaggle-2016/Teams.csv",
-            help = "path to Teams.csv (default: data/raw/meta-kaggle-2016/Teams.csv)")
+            '-t', '--metadata_path',
+            default = "data/raw/meta-kaggle-2016",
+            help = "path to Kaggle Meta Dataset 2016, where Teams.csv is (default: data/raw/meta-kaggle-2016)")
     parser.add_argument(
             '-r', '--repos_path',
             default = "data/external/repositories",
@@ -96,4 +96,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     # run main
-    main(args.teams_path, args.repos_path)
+    main(args.metadata_path, args.repos_path)

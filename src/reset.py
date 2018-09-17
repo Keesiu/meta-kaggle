@@ -18,6 +18,10 @@ def main(repos_path = "data/external/repositories", logs_path = "logs"):
     if os.path.exists(repos_path):
         shutil.rmtree(repos_path)
     
+    # delete all interim data
+    
+    # delete all processed data
+    
     # delete all log-files
     for file in os.listdir(logs_path):
         if file[-4:] == '.log':

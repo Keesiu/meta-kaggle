@@ -19,7 +19,7 @@ def main(metadata_path = "data/raw/meta-kaggle-2016",
     
     # normalize paths
     metadata_path = os.path.normpath(metadata_path)
-    logger.debug("Path to Team.csv normalized: {}".format(metadata_path))
+    logger.debug("Path to meta-kaggle-2016 normalized: {}".format(metadata_path))
     repos_path = os.path.normpath(repos_path)
     logger.debug("Path to repositories normalized: {}".format(repos_path))
     

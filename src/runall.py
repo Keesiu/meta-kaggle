@@ -8,10 +8,10 @@ if '' not in sys.path:
     sys.path.insert(0, '')
 
 from src.data import download, clean
-from src.features import table, extract
+from src.features import table, extract, aggregate
 
 
-def main(metadata_path, repos_path, interim_path):
+def main(metadata_path, repos_path, interim_path, processed_path):
     
     """Runs everything.
     
@@ -37,6 +37,12 @@ def main(metadata_path, repos_path, interim_path):
     logging.info("Starting extract.py.")
     extract.main(interim_path)
     logging.info("Finished extract.py.")
+    
+    # aggregate source code metrics from features_df to repos_df
+    logging.info("Starting aggregate.py.")
+    aggregate.main(metadata_path, interim_path, processed_path)
+    logging.info("Finished aggregate.py.")
+
 
 if __name__ == '__main__':
     
@@ -62,7 +68,11 @@ if __name__ == '__main__':
             '-i', '--interim_path',
             default = "data/interim",
             help = "path to store the output features_df.pkl (default: data/interim)")
+    parser.add_argument(
+            '-p', '--processed_path',
+            default = "data/processed",
+            help = "path to store the aggregated output repos_df.pkl (default: data/processed)")
     args = parser.parse_args()
     
     # run main
-    main(args.metadata_path, args.repos_path, args.interim_path)
+    main(args.metadata_path, args.repos_path, args.interim_path, args.processed_path)

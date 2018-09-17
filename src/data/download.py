@@ -18,13 +18,13 @@ def main(metadata_path = "data/raw/meta-kaggle-2016",
     logger = logging.getLogger(__name__)
     
     # normalize paths
-    teams_path = os.path.normpath(os.path.join(metadata_path, 'Teams.csv'))
-    logger.debug("Path to Team.csv normalized: {}".format(teams_path))
+    metadata_path = os.path.normpath(metadata_path)
+    logger.debug("Path to Team.csv normalized: {}".format(metadata_path))
     repos_path = os.path.normpath(repos_path)
     logger.debug("Path to repositories normalized: {}".format(repos_path))
     
     # load Teams.csv
-    team_csv = pd.read_csv(teams_path, low_memory=False)
+    team_csv = pd.read_csv(os.path.join(metadata_path, 'Teams.csv'), low_memory=False)
     n_total = len(team_csv)
     logger.info("Loaded Team.csv with {} entries.".format(n_total))
     

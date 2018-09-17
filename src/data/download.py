@@ -24,21 +24,21 @@ def main(metadata_path = "data/raw/meta-kaggle-2016",
     logger.debug("Path to repositories normalized: {}".format(repos_path))
     
     # load Teams.csv
-    team_csv = pd.read_csv(os.path.join(metadata_path, 'Teams.csv'), low_memory=False)
-    n_total = len(team_csv)
+    teams_df = pd.read_csv(os.path.join(metadata_path, 'Teams.csv'), low_memory=False)
+    n_total = len(teams_df)
     logger.info("Loaded Team.csv with {} entries.".format(n_total))
     
     # drop all entries, that don't have a repo entry
-    team_csv_with_link = team_csv.dropna(subset=['GithubRepoLink'])
-    n_link = len(team_csv_with_link)
+    team_with_link_df = teams_df.dropna(subset=['GithubRepoLink'])
+    n_with_link = len(team_with_link_df)
     logger.info("In Team.csv from {} entries {} have a GithubRepoLink."
-            .format(n_total, n_link))
+            .format(n_total, n_with_link))
     
     n_try = 0
     n_success = 0
     n_error = 0
     start = time()
-    for _, row in team_csv_with_link.iterrows():
+    for _, row in team_with_link_df.iterrows():
         
         # skip if the current folder already exists
         repo_path = os.path.join(repos_path, str(row['Id']))

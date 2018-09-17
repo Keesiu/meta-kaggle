@@ -25,13 +25,12 @@ def main(interim_path = "data/interim"):
     # logging
     logger = logging.getLogger(__name__)
     
-    # transform path
+    # normalize path
     interim_path = os.path.normpath(interim_path)
-    scripts_df_path = os.path.join(interim_path, 'scripts_df.pkl')
-    logger.debug("Path to scripts_df created: {}".format(scripts_df_path))
+    logger.debug("Path to iterim data normalized: {}".format(interim_path))
     
     # load scripts_df and create copy for storing features
-    scripts_df = pd.read_pickle(scripts_df_path)
+    scripts_df = pd.read_pickle(os.path.join(interim_path, 'scripts_df.pkl'))
     features_df = scripts_df[['repo_id']].copy()
     logger.info("Created features_df.")
 

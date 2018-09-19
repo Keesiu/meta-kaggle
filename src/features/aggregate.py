@@ -107,12 +107,7 @@ if __name__ == '__main__':
             default = "data/interim",
             help = """path to extracted features features_df.pkl
                     (default: data/interim)""")
-    parser.add_argument(
-            '-p', '--processed_path',
-            default = "data/processed",
-            help = """path to store the aggregated output repos_df.pkl
-                    (default: data/processed)""")
     args = parser.parse_args()
     
     # run main
-    main(args.metadata_path, args.interim_path, args.processed_path)
+    main(args.metadata_path, args.interim_path)

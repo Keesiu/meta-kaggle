@@ -7,15 +7,14 @@ from time import time
 
 
 def main(metadata_path = "data/raw/meta-kaggle-2016",
-         interim_path = "data/interim",
-         processed_path = "data/processed"):
+         interim_path = "data/interim"):
     
     """Aggregates extracted features to repos_df.
     
-    Builds repos_df from Teams.csv by dropping all repos without python files,
+    Builds teams_df from Teams.csv by dropping all repos without python files,
     aggregates all source code metrics by repository ID and compute basic
     statistical metrics per repository, like mean and sum. Finally, combines
-    these statistics with repos_df and save it to <processed_path>."""
+    these statistics with teams_df and save it to <interim_path>."""
     
     # logging
     logger = logging.getLogger(__name__)
@@ -27,9 +26,6 @@ def main(metadata_path = "data/raw/meta-kaggle-2016",
     interim_path = os.path.normpath(interim_path)
     logger.debug("Path to iterim data normalized: {}"
                  .format(interim_path))
-    processed_path = os.path.normpath(processed_path)
-    logger.debug("Path to processed data normalized: {}"
-                 .format(processed_path))
     
     # load Teams.csv
     teams_df = pd.read_csv(os.path.join(metadata_path, 'Teams.csv'),
@@ -45,15 +41,15 @@ def main(metadata_path = "data/raw/meta-kaggle-2016",
     # start aggregation
     start = time()
     
-    # create repos_df by filtering for repos with features
+    # reduces teams_df by filtering for repos with features
     ids_counter = collections.Counter(features_df['repo_id'])
     ids_set = set(ids_counter)
     in_features = [repo_id in ids_set for repo_id in teams_df['Id'].tolist()]
-    repos_df = teams_df[in_features].set_index('Id')
+    teams_df = teams_df[in_features].set_index('Id')
     logger.info("Created repos_df.")
     
     # add column 'n_scripts' which counts the number of scripts
-    repos_df['n_scripts'] = [ids_counter[key] for key in repos_df.index]
+    teams_df['n_scripts'] = [ids_counter[key] for key in teams_df.index]
     logger.debug("Added column 'n_scripts' which is the number of scripts.")
     
     # transform boolean columns (like _is_error flags) to integer
@@ -74,14 +70,14 @@ def main(metadata_path = "data/raw/meta-kaggle-2016",
                     aggregated_df.shape[1],
                     8*(features_df.shape[1]-1)))
     
-    # combines aggregates features with repos_df
-    repos_df = pd.concat([repos_df, aggregated_df], axis=1)
+    # concatenates teams_df with aggregated_df
+    aggregated_df = pd.concat([teams_df, aggregated_df], axis=1)
     logger.info("Combined aggregated features with repos_df.")
     
-    # export repos_df as pickle file to processed folder
-    repos_df.to_pickle(os.path.join(processed_path, 'repos_df.pkl'))
+    # export aggregated_df as pickle file to processed folder
+    aggregated_df.to_pickle(os.path.join(interim_path, 'aggregated_df.pkl'))
     logger.info("Saved repos_df to {}."
-            .format(os.path.join(processed_path, 'repos_df.pkl')))
+            .format(os.path.join(interim_path, 'aggregated_df.pkl')))
     
     # logging time passed
     end = time()

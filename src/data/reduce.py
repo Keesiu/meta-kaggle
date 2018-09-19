@@ -7,7 +7,7 @@ from time import time
 
 def main(repos_path = "data/external/repositories"):
     
-    """Cleans the downloaded repositories.
+    """Reduces the downloaded repositories to python scripts.
     
     First, traverses all files and delete those not ending on '.py'.
     Then, deletes all empty folders, also empty repository folders.
@@ -83,7 +83,7 @@ if __name__ == '__main__':
     
     # parse arguments
     parser = argparse.ArgumentParser(
-            description = "Deletes all non-python files and empty folders.")
+            description = "Reduces the downloaded repositories to python scripts.")
     parser.add_argument(
             '-r', '--repos_path',
             default = "data/external/repositories",

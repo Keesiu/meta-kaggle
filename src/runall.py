@@ -7,7 +7,7 @@ import sys, logging, argparse
 if '' not in sys.path:
     sys.path.insert(0, '')
 
-from src.data import download, clean
+from src.data import download, reduce
 from src.features import table, extract, aggregate
 
 
@@ -24,9 +24,9 @@ def main(metadata_path, repos_path, interim_path, processed_path):
     logging.info("Finished download.py.")
     
     # cleans Github repositories by deleting every non-Python file
-    logging.info("Starting clean.py.")
-    clean.main(repos_path)
-    logging.info("Finished clean.py.")
+    logging.info("Starting reduce.py.")
+    reduce.main(repos_path)
+    logging.info("Finished reduce.py.")
     
     # tables the external scripts and their content to scripts_df
     logging.info("Starting table.py.")

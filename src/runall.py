@@ -7,8 +7,8 @@ import sys, logging, argparse
 if '' not in sys.path:
     sys.path.insert(0, '')
 
-from src.data import download, reduce
-from src.features import table, extract, aggregate
+from src.data import download, reduce, table
+from src.features import extract, aggregate
 
 
 def main(metadata_path, repos_path, interim_path, processed_path):

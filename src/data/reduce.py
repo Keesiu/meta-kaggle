@@ -78,7 +78,7 @@ if __name__ == '__main__':
     logging.basicConfig(
         level = logging.DEBUG,
         format = "%(asctime)s %(name)-20s %(levelname)-8s %(message)s",
-        filename = "logs/clean.log",
+        filename = "logs/reduce.log",
         datefmt = "%a, %d %b %Y %H:%M:%S")
     
     # parse arguments

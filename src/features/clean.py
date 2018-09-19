@@ -2,13 +2,15 @@
 
 import os, logging, argparse
 import pandas as pd
+import numpy as np
 from time import time
+import matplotlib.pyplot as plt
 
 
 def main(interim_path = "data/interim",
          processed_path = "data/processed"):
     
-    """Cleans aggregated data."""
+    """Cleans aggregated data and saves it to <processed_path>."""
     
     # logging
     logger = logging.getLogger(__name__)
@@ -29,7 +31,18 @@ def main(interim_path = "data/interim",
     # start cleaning
     start = time()
     
+    # split aggregated_df
+    [team_df, features_df] = np.split(aggregated_df, [9], axis=1)
+    # create multi-index
+    multi_index = pd.MultiIndex.from_tuples(features_df.columns, names = ['feature', 'stat'])
+    features_df.columns = multi_index
+    sums = features_df.xs('sum', axis=1, level=1)
+    means = features_df.xs('mean', axis=1, level=1)
+    
     # correlation coefficient matrix
+    temp = aggregated_df.corr()
+    plt.matshow(aggregated_df.corr())
+    
     # clean data
     
     # logging time passed

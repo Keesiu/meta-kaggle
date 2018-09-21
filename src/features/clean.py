@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from time import time
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 def main(interim_path = "data/interim",
@@ -32,16 +33,70 @@ def main(interim_path = "data/interim",
     start = time()
     
     # split aggregated_df
-    [team_df, features_df] = np.split(aggregated_df, [9], axis=1)
+    teams_df, features_df = aggregated_df.iloc[:,:9], aggregated_df.iloc[:,9:]
+    
     # create multi-index
-    multi_index = pd.MultiIndex.from_tuples(features_df.columns, names = ['feature', 'stat'])
+    multi_index = pd.MultiIndex.from_tuples(features_df.columns,
+                                            names=['feature', 'stat'])
     features_df.columns = multi_index
-    sums = features_df.xs('sum', axis=1, level=1)
-    means = features_df.xs('mean', axis=1, level=1)
+    
+    # drop mean columns since mostly irrelevant
+    df = features_df.drop('mean', axis=1, level=1)
+    
+    # re-include relevant columns from means
+    df = pd.concat([features_df[('radon_avg_cc', 'mean')],
+                    features_df[('radon_mi', 'mean')],
+                    features_df[('radon_raw_is_error', 'mean')],
+                    features_df[('radon_cc_is_error', 'mean')],
+                    features_df[('radon_h_is_error', 'mean')],
+                    features_df[('radon_mi_is_error', 'mean')],
+                    features_df[('pylint_is_error', 'mean')],
+                    df], axis=1)
+    
+    # drop halstead metrics since they are not additive thus wrong
+    df = df.drop([('radon_h_calculated_length', 'sum'),
+                  ('radon_h_volume', 'sum'),
+                  ('radon_h_difficulty', 'sum'),
+                  ('radon_h_effort', 'sum'),
+                  ('radon_h_time', 'sum'),
+                  ('radon_h_bugs', 'sum')], axis=1)
+    
+    # construct correct halstead metrics
+    # see: https://radon.readthedocs.io/en/latest/intro.html#halstead-metrics
+    df[('radon_h_calculated_length', 'custom')] = df[('radon_h_h1', 'sum')] \
+            * np.log2(df[('radon_h_h1', 'sum')]) \
+            + df[('radon_h_h2', 'sum')] \
+            * np.log2(df[('radon_h_h2', 'sum')])
+    df[('radon_h_volume', 'custom')] = df[('radon_h_length', 'sum')] \
+            * np.log2(df[('radon_h_vocabulary', 'sum')])
+    df[('radon_h_difficulty', 'custom')] = df[('radon_h_h1', 'sum')] / 2 \
+            * df[('radon_h_N2', 'sum')] / df[('radon_h_h2', 'sum')]
+    df[('radon_h_effort', 'custom')] = df[('radon_h_difficulty', 'custom')] \
+            * df[('radon_h_volume', 'custom')]
+    df[('radon_h_time', 'custom')] = df[('radon_h_effort', 'custom')] / 18
+    df[('radon_h_bugs', 'custom')] = df[('radon_h_volume', 'custom')] / 3000
+    
+    df = pd.concat([teams_df, df], axis=1)
     
     # correlation coefficient matrix
-    temp = aggregated_df.corr()
-    plt.matshow(aggregated_df.corr())
+    corr = df.iloc[:,:40].corr()
+    # Generate a mask for the upper triangle
+    mask = np.zeros_like(corr, dtype=np.bool)
+    mask[np.triu_indices_from(mask)] = True
+    # Set up the matplotlib figure
+    f, ax = plt.subplots(figsize=(35, 30))
+    # Generate a custom diverging colormap
+    cmap = sns.diverging_palette(240, 10, as_cmap=True)
+    # Draw the heatmap with the mask and correct aspect ratio
+    svm = sns.heatmap(corr, mask=mask, cmap=cmap, vmin=-1, vmax=1, center=0,
+                annot=True,
+                square=True, linewidths=.5, cbar_kws={"shrink": .5})
+    figure = svm.get_figure()    
+    figure.savefig('svm_conf.png', dpi=100)
+    
+#    # seperate sum features and mean features
+#    sums = features_df.xs('sum', axis=1, level=1)
+#    means = features_df.xs('mean', axis=1, level=1)
     
     # clean data
     

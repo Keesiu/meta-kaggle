@@ -16,7 +16,7 @@ def main(interim_path = "data/interim",
     
     # normalize paths
     interim_path = os.path.normpath(interim_path)
-    logger.debug("Path to iterim data normalized: {}"
+    logger.debug("Path to interim data normalized: {}"
                  .format(interim_path))
     processed_path = os.path.normpath(processed_path)
     logger.debug("Path to processed data normalized: {}"
@@ -24,40 +24,63 @@ def main(interim_path = "data/interim",
     
     # load aggregated_df
     aggregated_df = pd.read_pickle(os.path.join(interim_path, 'aggregated_df.pkl'))
-    logger.info("Loaded aggregated_df.pkl with {} files."
-                .format(len(aggregated_df)))
+    logger.info("Loaded aggregated_df.pkl. Shape of aggregated_df: {}"
+                .format(aggregated_df.shape))
     
-    # start cleaning
+    #%% start cleaning
     start = time()
     
     # split aggregated_df
     teams_df, features_df = aggregated_df.iloc[:,:9], aggregated_df.iloc[:,9:]
+    logger.info("agrgregated_df splitted to teams_df {} & features_df {}."
+                .format(teams_df.shape, features_df.shape))
     
     # create multi-index
+    # make features names unique for which both sum and mean are kept
+    features_df.rename(mapper={('radon_mi', 'sum'): ('radon_mi_sum', 'sum'),
+                               ('radon_mi', 'mean'): ('radon_mi_mean', 'mean')},
+            axis=1, inplace=True)
+    logger.info("Renamed column ('radon_mi', 'sum'): ('radon_mi_sum', 'sum').")
+    logger.info("Renamed column ('radon_mi', 'mean'): ('radon_mi_mean', 'mean').")
     multi_index = pd.MultiIndex.from_tuples(features_df.columns,
                                             names=['feature', 'stat'])
     features_df.columns = multi_index
+    logger.info("Created MultiIndex of features_df to split sums and means.")
+    
+    #%% cleaning columns
     
     # drop mean columns since mostly irrelevant
     df = features_df.drop('mean', axis=1, level=1)
+    logger.info("Created df by dropping all 'mean' features. Shape of df: {}"
+                .format(df.shape))
     
     # re-include relevant columns from means
     df = pd.concat([features_df[('radon_avg_cc', 'mean')],
-                    features_df[('radon_mi', 'mean')],
+                    features_df[('radon_mi_mean', 'mean')],
                     features_df[('radon_raw_is_error', 'mean')],
                     features_df[('radon_cc_is_error', 'mean')],
                     features_df[('radon_h_is_error', 'mean')],
                     features_df[('radon_mi_is_error', 'mean')],
                     features_df[('pylint_is_error', 'mean')],
                     df], axis=1)
+    logger.info("Re-included 7 relevant 'mean' features. Shape of df: {}"
+                .format(df.shape))
+    
+    # drop column (radon_avg_cc, sum)
+    df.drop([('radon_avg_cc', 'sum')], axis=1, inplace=True)
+    logger.info("Dropped column (radon_avg_cc, sum). Shape of df: {}"
+                .format(df.shape))
     
     # drop halstead metrics since they are not additive thus wrong
-    df = df.drop([('radon_h_calculated_length', 'sum'),
-                  ('radon_h_volume', 'sum'),
-                  ('radon_h_difficulty', 'sum'),
-                  ('radon_h_effort', 'sum'),
-                  ('radon_h_time', 'sum'),
-                  ('radon_h_bugs', 'sum')], axis=1)
+    df.drop([('radon_h_calculated_length', 'sum'),
+             ('radon_h_volume', 'sum'),
+             ('radon_h_difficulty', 'sum'),
+             ('radon_h_effort', 'sum'),
+             ('radon_h_time', 'sum'),
+             ('radon_h_bugs', 'sum')],
+            axis=1, inplace=True)
+    logger.info("Dropped 6 wrong calculated Halstead metrics. Shape of df: {}"
+                .format(df.shape))
     
     # construct correct halstead metrics
     # see: https://radon.readthedocs.io/en/latest/intro.html#halstead-metrics
@@ -73,16 +96,66 @@ def main(interim_path = "data/interim",
             * df[('radon_h_volume', 'custom')]
     df[('radon_h_time', 'custom')] = df[('radon_h_effort', 'custom')] / 18
     df[('radon_h_bugs', 'custom')] = df[('radon_h_volume', 'custom')] / 3000
+    logger.info("Constructed 6 Halstead metrics correctly. Shape of df: {}"
+                .format(df.shape))
     
+    #%% cleaning rows
     
+    # delete repos with to many errors during feature extraction
+    df = df[df[('radon_raw_is_error', 'mean')] != 1]
+    df = df[df[('radon_cc_is_error', 'mean')] != 1]
+    df = df[df[('radon_h_is_error', 'mean')] != 1]
+    df = df[df[('radon_mi_is_error', 'mean')] != 1]
+    df = df[df[('pylint_is_error', 'mean')] != 1]
+    logger.info("Dropped all rows with error rates = 1. Shape of df: {}"
+                .format(df.shape))
     
-    df = pd.concat([teams_df, df], axis=1)
+    # delete rows of error rates
+    df.drop(columns=[('radon_raw_is_error', 'mean'),
+                     ('radon_cc_is_error', 'mean'),
+                     ('radon_h_is_error', 'mean'),
+                     ('radon_mi_is_error', 'mean'),
+                     ('pylint_is_error', 'mean'),
+                     ('radon_raw_is_error', 'sum'),
+                     ('radon_cc_is_error', 'sum'),
+                     ('radon_h_is_error', 'sum'),
+                     ('radon_mi_is_error', 'sum'),
+                     ('pylint_is_error', 'sum'),], inplace=True)
+    logger.info("Dropped 10 is_error columns. Shape of df: {}"
+                .format(df.shape))
+    
+    # delete rows with NaNs
+    df.dropna(inplace=True)
+    logger.info("Dropped all rows with NaNs. Shape of df: {}"
+                .format(df.shape))
+    
+    # drop second level of MultiIndex
+    df.columns = df.columns.droplevel(level=1)
+    
+    # concatenate df with Score and Ranking
+    df = pd.concat([pd.to_numeric(teams_df.Score),
+                    pd.to_numeric(teams_df.Ranking),
+                    df],
+                    join='inner', axis=1)
+    logger.info("Concatenated df with Score and Ranking. Shape of df: {}"
+                .format(df.shape))
+    
+    # drop repos with outlying scores
+    df = df[df.Score <= 1]
+    logger.info("Dropped rows with Scores > 1. Shape of df: {}"
+                .format(df.shape))
+    
+    #%% export df as pickle file to processed folder
+    aggregated_df.to_pickle(os.path.join(processed_path, 'df.pkl'))
+    logger.info("Saved repos_df to {}."
+            .format(os.path.join(processed_path, 'df.pkl')))
     
     # logging time passed
     end = time()
     time_passed = pd.Timedelta(seconds=end-start).round(freq='s')
-    logger.info("Time needed to extract the features: {}".format(time_passed))
+    logger.info("Time needed to clean the features: {}".format(time_passed))
 
+#%%
 if __name__ == '__main__':
     
     # configure logging

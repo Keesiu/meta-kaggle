@@ -3,6 +3,10 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+sns.set_context('paper')
+
+# score and ranking
+sns.scatterplot(x=teams_df.Score, y=teams_df.Ranking)
 
 # correlation coefficient matrix
 corr = df.iloc[:,:40].corr()
@@ -19,7 +23,3 @@ corr_heatmap = sns.heatmap(corr, mask=mask, cmap=cmap, vmin=-1, vmax=1, center=0
             square=True, linewidths=.5, cbar_kws={"shrink": .5})
 corr_heatmap_fig = corr_heatmap.get_figure()    
 corr_heatmap_fig.savefig('svm_conf.png', dpi=100)
-
-# score and ranking
-sns.scatterplot(x=teams_df.Score, y=teams_df.Ranking)
-sns.relplot(data=teams_df[['Score','Ranking']])

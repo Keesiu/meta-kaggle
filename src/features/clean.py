@@ -4,8 +4,6 @@ import os, logging, argparse
 import pandas as pd
 import numpy as np
 from time import time
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 
 def main(interim_path = "data/interim",
@@ -76,29 +74,9 @@ def main(interim_path = "data/interim",
     df[('radon_h_time', 'custom')] = df[('radon_h_effort', 'custom')] / 18
     df[('radon_h_bugs', 'custom')] = df[('radon_h_volume', 'custom')] / 3000
     
+    
+    
     df = pd.concat([teams_df, df], axis=1)
-    
-    # correlation coefficient matrix
-    corr = df.iloc[:,:40].corr()
-    # Generate a mask for the upper triangle
-    mask = np.zeros_like(corr, dtype=np.bool)
-    mask[np.triu_indices_from(mask)] = True
-    # Set up the matplotlib figure
-    f, ax = plt.subplots(figsize=(35, 30))
-    # Generate a custom diverging colormap
-    cmap = sns.diverging_palette(240, 10, as_cmap=True)
-    # Draw the heatmap with the mask and correct aspect ratio
-    svm = sns.heatmap(corr, mask=mask, cmap=cmap, vmin=-1, vmax=1, center=0,
-                annot=True,
-                square=True, linewidths=.5, cbar_kws={"shrink": .5})
-    figure = svm.get_figure()    
-    figure.savefig('svm_conf.png', dpi=100)
-    
-#    # seperate sum features and mean features
-#    sums = features_df.xs('sum', axis=1, level=1)
-#    means = features_df.xs('mean', axis=1, level=1)
-    
-    # clean data
     
     # logging time passed
     end = time()

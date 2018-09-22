@@ -84,7 +84,7 @@ def main(metadata_path = "data/raw/meta-kaggle-2016",
     aggregated_df = pd.concat([teams_df, aggregated_df], axis=1)
     logger.info("Combined aggregated features with repos_df.")
     
-    # export aggregated_df as pickle file to processed folder
+    # export aggregated_df as pickle file to interim folder
     aggregated_df.to_pickle(os.path.join(interim_path, 'aggregated_df.pkl'))
     logger.info("Saved repos_df to {}."
             .format(os.path.join(interim_path, 'aggregated_df.pkl')))

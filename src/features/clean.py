@@ -13,7 +13,7 @@ def main(interim_path = "data/interim",
     
     Drops unnecessary columns, and construct new, interesting ones.
     Also drops rows, which has to high error rates during feature extraction.
-    Finally, drops rows with NaNs or with outliers as values, like Score > 1."""
+    Then drops rows with NaNs or with outliers as values, like Score > 1."""
     
     # logging
     logger = logging.getLogger(__name__)
@@ -27,7 +27,8 @@ def main(interim_path = "data/interim",
                  .format(processed_path))
     
     # load aggregated_df
-    aggregated_df = pd.read_pickle(os.path.join(interim_path, 'aggregated_df.pkl'))
+    aggregated_df = pd.read_pickle(os.path.join(interim_path,
+                                                'aggregated_df.pkl'))
     logger.info("Loaded aggregated_df.pkl. Shape of aggregated_df: {}"
                 .format(aggregated_df.shape))
     
@@ -41,11 +42,11 @@ def main(interim_path = "data/interim",
     
     # create multi-index
     # make features names unique for which both sum and mean are kept
-    features_df.rename(mapper={('radon_mi', 'sum'): ('radon_mi_sum', 'sum'),
-                               ('radon_mi', 'mean'): ('radon_mi_mean', 'mean')},
+    features_df.rename(mapper={('radon_mi', 'sum'):('radon_mi_sum', 'sum'),
+                               ('radon_mi', 'mean'):('radon_mi_mean', 'mean')},
             axis=1, inplace=True)
-    logger.info("Renamed column ('radon_mi', 'sum'): ('radon_mi_sum', 'sum').")
-    logger.info("Renamed column ('radon_mi', 'mean'): ('radon_mi_mean', 'mean').")
+    logger.info("Renamed col ('radon_mi', 'sum'): ('radon_mi_sum', 'sum').")
+    logger.info("Renamed col ('radon_mi', 'mean'): ('radon_mi_mean', 'mean').")
     multi_index = pd.MultiIndex.from_tuples(features_df.columns,
                                             names=['feature', 'stat'])
     features_df.columns = multi_index
@@ -150,7 +151,7 @@ def main(interim_path = "data/interim",
                 .format(df.shape))
     
     #%% export df as pickle file to processed folder
-    aggregated_df.to_pickle(os.path.join(processed_path, 'df.pkl'))
+    df.to_pickle(os.path.join(processed_path, 'df.pkl'))
     logger.info("Saved repos_df to {}."
             .format(os.path.join(processed_path, 'df.pkl')))
     
@@ -173,15 +174,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
             description = "Cleans aggregated data.")
     parser.add_argument(
-            '-i', '--interim_path',
+            '--interim_path',
             default = "data/interim",
-            help = """path to aggregated features aggregated_df.pkl
-                    (default: data/interim)""")
+            help = "path to aggregated features aggregated_df.pkl \
+                    (default: data/interim)")
     parser.add_argument(
-            '-p', '--processed_path',
+            '--processed_path',
             default = "data/processed",
-            help = """path to store the cleaned output df.pkl
-                    (default: data/processed)""")
+            help = "path to store the cleaned output df.pkl \
+                    (default: data/processed)")
     args = parser.parse_args()
     
     # run main

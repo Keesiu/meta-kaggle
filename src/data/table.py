@@ -8,9 +8,9 @@ from time import time
 def main(repos_path = "data/external/repositories",
          interim_path = "data/interim"):
     
-    """Tables external python scripts and their content in scripts_df.
+    """Tables external python scripts and their content.
     
-    scripts_df is a pandas DataFrame with 4 columns:
+    Outputs scripts_df as DataFrame with 4 columns:
     repo_id: the respective repository ID of the script from Team.csv
     path: path to the script file
     name: name to the script file
@@ -79,15 +79,17 @@ if __name__ == '__main__':
     
     # parse arguments
     parser = argparse.ArgumentParser(
-            description = "Tables external python scripts and their content in scripts_df.")
+            description = "Tables external python scripts and their content.")
     parser.add_argument(
-            '-r', '--repos_path',
+            '--repos_path',
             default = "data/external/repositories",
-            help = "path to downloaded repositories (default: data/external/repositories)")
+            help = "path to downloaded repositories \
+                    (default: data/external/repositories)")
     parser.add_argument(
-            '-i', '--interim_path',
+            '--interim_path',
             default = "data/interim",
-            help = "path to store the output scripts_df.pkl (default: data/interim)")
+            help = "path to store the output scripts_df.pkl \
+                    (default: data/interim)")
     args = parser.parse_args()
     
     # run main

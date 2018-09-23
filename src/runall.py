@@ -3,7 +3,8 @@
 import sys, logging, argparse
 
 # forces import statement to also search in cwd (should be .../meta-kaggle)
-# see: chrisyeh96.github.io/2017/08/08/definitive-guide-python-imports.html#more-on-syspath
+# see: chrisyeh96.github.io/2017/08/08/
+# definitive-guide-python-imports.html#more-on-syspath
 if '' not in sys.path:
     sys.path.insert(0, '')
 
@@ -18,7 +19,7 @@ def main(metadata_path, repos_path, interim_path, processed_path):
     Downloads external data from Teams.csv and cleans it.
     """
     
-    # downloads Github repositories from Team.csv to data/external/repositories
+    # downloads Github repos from Team.csv to data/external/repositories
     logging.info("Starting download.py.")
     download.main(metadata_path, repos_path)
     logging.info("Finished download.py.")
@@ -57,22 +58,29 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
             description = "Runs everything.")
     parser.add_argument(
-            '-m', '--metadata_path',
+            '--metadata_path',
             default = "data/raw/meta-kaggle-2016",
-            help = "path to Kaggle Meta Dataset 2016, where Teams.csv is (default: data/raw/meta-kaggle-2016)")
+            help = "path to Kaggle Meta Dataset 2016, where Teams.csv is \
+                    (default: data/raw/meta-kaggle-2016)")
     parser.add_argument(
-            '-r', '--repos_path',
+            '--repos_path',
             default = "data/external/repositories",
-            help = "path to store downloaded repositories (default: data/external/repositories)")
+            help = "path to store downloaded repositories \
+                    (default: data/external/repositories)")
     parser.add_argument(
-            '-i', '--interim_path',
+            '--interim_path',
             default = "data/interim",
-            help = "path to store the output features_df.pkl (default: data/interim)")
+            help = "path to store the output features_df.pkl \
+                    (default: data/interim)")
     parser.add_argument(
-            '-p', '--processed_path',
+            '--processed_path',
             default = "data/processed",
-            help = "path to store the aggregated output repos_df.pkl (default: data/processed)")
+            help = "path to store the aggregated output repos_df.pkl \
+                    (default: data/processed)")
     args = parser.parse_args()
     
     # run main
-    main(args.metadata_path, args.repos_path, args.interim_path, args.processed_path)
+    main(args.metadata_path,
+         args.repos_path,
+         args.interim_path,
+         args.processed_path)

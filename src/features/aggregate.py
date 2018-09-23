@@ -76,8 +76,10 @@ def main(metadata_path = "data/raw/meta-kaggle-2016",
         repos[repo_id] = stats
     columns = list(itertools.product(features_df.columns[1:], ['sum', 'mean']))
     # build aggregated_df from dict repos
-    aggregated_df = pd.DataFrame.from_dict(repos, orient='index', columns=columns)
-    logger.info("{} features/script aggregated to {} features/repository (x2)."
+    aggregated_df = pd.DataFrame.from_dict(repos,
+                                           orient='index',
+                                           columns=columns)
+    logger.info("{} features per script aggregated to {} features per repository (x2 because sum and mean)."
                 .format(features_df.shape[1]-1, aggregated_df.shape[1]))
     
     # concatenates teams_df with aggregated_df
@@ -108,15 +110,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
             description = "Aggregates extracted features to repos_df.")
     parser.add_argument(
-            '-m', '--metadata_path',
+            '--metadata_path',
             default = "data/raw/meta-kaggle-2016",
-            help = """path to Kaggle Meta Dataset 2016, where Teams.csv is
-                    (default: data/raw/meta-kaggle-2016)""")
+            help = "path to Kaggle Meta Dataset 2016, where Teams.csv is \
+                    (default: data/raw/meta-kaggle-2016)")
     parser.add_argument(
-            '-i', '--interim_path',
+            '--interim_path',
             default = "data/interim",
-            help = """path to extracted features features_df.pkl
-                    (default: data/interim)""")
+            help = "path to extracted features features_df.pkl \
+                    (default: data/interim)")
     args = parser.parse_args()
     
     # run main

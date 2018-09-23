@@ -10,21 +10,21 @@ def main(metadata_path = "data/raw/meta-kaggle-2016",
     
     """Downloads the available repositories from Teams.csv.
     
-    Iterates GithubRepoLink column of Teams.csv and downloads the master branch
-    if available. Folders already existing on <repos_path> are skipped.
-    """
+    Iterates GithubRepoLink column of Teams.csv and downloads master branch
+    if available. Folders already existing on <repos_path> are skipped."""
     
     # logging
     logger = logging.getLogger(__name__)
     
     # normalize paths
     metadata_path = os.path.normpath(metadata_path)
-    logger.debug("Path to meta-kaggle-2016 normalized: {}".format(metadata_path))
+    logger.debug("Path to meta data normalized: {}".format(metadata_path))
     repos_path = os.path.normpath(repos_path)
     logger.debug("Path to repositories normalized: {}".format(repos_path))
     
     # load Teams.csv
-    teams_df = pd.read_csv(os.path.join(metadata_path, 'Teams.csv'), low_memory=False)
+    teams_df = pd.read_csv(os.path.join(metadata_path, 'Teams.csv'),
+                           low_memory=False)
     n_total = len(teams_df)
     logger.info("Loaded Team.csv with {} entries.".format(n_total))
     
@@ -43,8 +43,8 @@ def main(metadata_path = "data/raw/meta-kaggle-2016",
         # skip if the current folder already exists
         repo_path = os.path.join(repos_path, str(row['Id']))
         if os.path.exists(repo_path):
-            logger.warning("Download of repo {:6} {:11} Team: {:20.15}"
-                    .format(row['Id'], 'skipped.', row['TeamName']+'.'))
+            logger.warning("Download repo {:6} skipped.    Team: {:20.15}."
+                    .format(row['Id'], row['TeamName']))
             continue
         
         # try to download current repository
@@ -56,11 +56,11 @@ def main(metadata_path = "data/raw/meta-kaggle-2016",
             req.raise_for_status()
             z = zipfile.ZipFile(io.BytesIO(req.content))
             z.extractall(repo_path)
-            logger.debug("Downloading repo {:6} successful. Team: {:20.15}."
+            logger.debug("Download repo {:6} successful. Team: {:20.15}."
                     .format(row['Id'], row['TeamName']))
             n_success += 1
         except Exception:
-            logger.exception("Downloading repo {:6} failed.     Team: {:20.15}."
+            logger.exception("Download repo {:6} failed.     Team: {:20.15}."
                     .format(row['Id'], row['TeamName']))
             n_error += 1
     
@@ -84,15 +84,17 @@ if __name__ == '__main__':
     
     # parse arguments
     parser = argparse.ArgumentParser(
-            description = "Downloads available Github repositories from Team.csv.")
+            description = "Downloads available repositories from Team.csv.")
     parser.add_argument(
-            '-t', '--metadata_path',
+            '--metadata_path',
             default = "data/raw/meta-kaggle-2016",
-            help = "path to Kaggle Meta Dataset 2016, where Teams.csv is (default: data/raw/meta-kaggle-2016)")
+            help = "path to Kaggle Meta Dataset 2016, where Teams.csv is \
+                    (default: data/raw/meta-kaggle-2016)")
     parser.add_argument(
-            '-r', '--repos_path',
+            '--repos_path',
             default = "data/external/repositories",
-            help = "path to store downloaded repositories (default: data/external/repositories)")
+            help = "path to store downloaded repositories \
+                    (default: data/external/repositories)")
     args = parser.parse_args()
     
     # run main

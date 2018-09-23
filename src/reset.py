@@ -35,7 +35,8 @@ if __name__ == '__main__':
     parser.add_argument(
             '-r', '--repo_path',
             default = "data/external/repositories",
-            help = "path to downloaded repositories (default: data/external/repositories)")
+            help = "path to downloaded repositories \
+                    (default: data/external/repositories)")
     parser.add_argument(
             '-l', '--logs_path',
             default = "logs",

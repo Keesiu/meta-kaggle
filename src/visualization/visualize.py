@@ -6,10 +6,10 @@ import seaborn as sns
 sns.set_context('paper')
 
 # score and ranking
-sns.scatterplot(x=teams_df.Score, y=teams_df.Ranking)
+sns.scatterplot(x=df.Score, y=df.Ranking)
 
 # correlation coefficient matrix
-corr = df.iloc[:,:40].corr()
+corr = selected_df.corr()
 # Generate a mask for the upper triangle
 mask = np.zeros_like(corr, dtype=np.bool)
 mask[np.triu_indices_from(mask)] = True

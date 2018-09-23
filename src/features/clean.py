@@ -9,7 +9,11 @@ from time import time
 def main(interim_path = "data/interim",
          processed_path = "data/processed"):
     
-    """Cleans aggregated data and saves it to <processed_path>."""
+    """Cleans aggregated data and saves it to <processed_path>.
+    
+    Drops unnecessary columns, and construct new, interesting ones.
+    Also drops rows, which has to high error rates during feature extraction.
+    Finally, drops rows with NaNs or with outliers as values, like Score > 1."""
     
     # logging
     logger = logging.getLogger(__name__)
@@ -171,12 +175,12 @@ if __name__ == '__main__':
     parser.add_argument(
             '-i', '--interim_path',
             default = "data/interim",
-            help = """path to extracted features features_df.pkl
+            help = """path to aggregated features aggregated_df.pkl
                     (default: data/interim)""")
     parser.add_argument(
             '-p', '--processed_path',
             default = "data/processed",
-            help = """path to store the aggregated output repos_df.pkl
+            help = """path to store the cleaned output df.pkl
                     (default: data/processed)""")
     args = parser.parse_args()
     

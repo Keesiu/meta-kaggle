@@ -4,6 +4,9 @@ import os, logging, argparse
 import pandas as pd
 import numpy as np
 from time import time
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
 
 
 def main(processed_path = "data/processed",
@@ -18,8 +21,11 @@ def main(processed_path = "data/processed",
     processed_path = os.path.normpath(processed_path)
     logger.debug("Path to processed data normalized: {}"
                  .format(processed_path))
+    models_path = os.path.normpath(models_path)
+    logger.debug("Path to models normalized: {}"
+                 .format(models_path))
     
-    # load aggregated_df
+    # load df
     df = pd.read_pickle(os.path.join(processed_path, 'df.pkl'))
     logger.info("Loaded df.pkl. Shape of df: {}"
                 .format(df.shape))
@@ -27,6 +33,22 @@ def main(processed_path = "data/processed",
     #%% start training
     start = time()
     
+    y, X = np.split(df, [1], axis=1)
+    
+    X_train, X_test, y_train, y_test  = train_test_split(
+            X, y, test_size=0.3, random_state=42)
+    
+    # logistic regression
+    
+    # Linear regression
+    lr = LinearRegression()
+    lr.fit(X_train, y_train)
+    lr.score(X_test, y_test)
+    lr.get_params()
+    lr.coef_
+    
+    plt.plot(X, lr.predict(X))
+    plt.show()
     
 #%%
 if __name__ == '__main__':
@@ -46,7 +68,7 @@ if __name__ == '__main__':
             default = "data/processed",
             help = "path to load the cleaned data df.pkl \
                     (default: data/processed)")
-        parser.add_argument(
+    parser.add_argument(
             '--models_path',
             default = "models",
             help = "path to save the trained models \
@@ -54,4 +76,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     # run main
-    main(args.interim_path, args.processed_path)
+    main(args.processed_path, args.models_path)

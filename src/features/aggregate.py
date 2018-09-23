@@ -10,7 +10,7 @@ import itertools
 def main(metadata_path = "data/raw/meta-kaggle-2016",
          interim_path = "data/interim"):
     
-    """Aggregates extracted features to repos_df.
+    """Aggregates extracted features from script to repository level.
     
     Builds teams_df from Teams.csv by dropping all repos without python files,
     aggregates all source code metrics by repository ID and compute basic
@@ -108,7 +108,7 @@ if __name__ == '__main__':
     
     # parse arguments
     parser = argparse.ArgumentParser(
-            description = "Aggregates extracted features to repos_df.")
+            description = "Aggregates extracted features from script to repository level.")
     parser.add_argument(
             '--metadata_path',
             default = "data/raw/meta-kaggle-2016",

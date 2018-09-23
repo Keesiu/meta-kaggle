@@ -152,7 +152,7 @@ def main(interim_path = "data/interim",
     
     #%% export df as pickle file to processed folder
     df.to_pickle(os.path.join(processed_path, 'df.pkl'))
-    logger.info("Saved repos_df to {}."
+    logger.info("Saved df to {}."
             .format(os.path.join(processed_path, 'df.pkl')))
     
     # logging time passed

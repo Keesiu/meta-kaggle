@@ -19,7 +19,6 @@ f, ax = plt.subplots(figsize=(35, 30))
 cmap = sns.diverging_palette(240, 10, as_cmap=True)
 # Draw the heatmap with the mask and correct aspect ratio
 corr_heatmap = sns.heatmap(corr, mask=mask, cmap=cmap, vmin=-1, vmax=1, center=0,
-            annot=True,
             square=True, linewidths=.5, cbar_kws={"shrink": .5})
 corr_heatmap_fig = corr_heatmap.get_figure()    
-corr_heatmap_fig.savefig('svm_conf.png', dpi=100)
+corr_heatmap_fig.savefig('corr_heatmap_after_decorrelation.png', dpi=100)

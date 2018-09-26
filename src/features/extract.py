@@ -76,9 +76,9 @@ def main(interim_path = "data/interim"):
     radon_cc = [try_radon_cc(scripts_df.content, index, logger)
                 for index in scripts_df.index]
     # save results to features_df
-    features_df['radon_avg_cc'] = list(
+    features_df['radon_cc_mean'] = list(
                         map(radon.complexity.average_complexity, radon_cc))
-    features_df['radon_sum_cc'] = [sum([obj.complexity for obj in blocks])
+    features_df['radon_cc_sum'] = [sum([obj.complexity for obj in blocks])
                                     for blocks in radon_cc]
     # set is_error flag
     features_df['radon_cc_is_error'] = [isinstance(x, str) for x in radon_cc]

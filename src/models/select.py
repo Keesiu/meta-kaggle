@@ -4,6 +4,7 @@ import os, logging, argparse
 import pandas as pd
 import numpy as np
 from time import time
+from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 
 def main(processed_path = "data/processed"):
@@ -18,13 +19,13 @@ def main(processed_path = "data/processed"):
     logger.debug("Path to processed data normalized: {}"
                  .format(processed_path))
     
-    # load df
-    df = pd.read_pickle(os.path.join(processed_path, 'df.pkl'))
-    logger.info("Loaded df.pkl. Shape of df: {}"
-                .format(df.shape))
+    # load cleaned_df
+    cleaned_df = pd.read_pickle(os.path.join(processed_path, 'cleaned_df.pkl'))
+    logger.info("Loaded cleaned_df.pkl. Shape of df: {}"
+                .format(cleaned_df.shape))
     
     # split df into dependent and independent variables
-    y, X = np.split(df, [2], axis=1)
+    y, X = np.split(cleaned_df, [2], axis=1)
     
     #%% start feature selection
     start = time()
@@ -33,7 +34,7 @@ def main(processed_path = "data/processed"):
     
     # drop features with more than 95% zeros
     col_old = set(X.columns)
-    dropped = df.columns[(((df == 0).sum()/n) > .95).values].tolist()
+    dropped = cleaned_df.columns[(((cleaned_df == 0).sum()/n) > .95).values].tolist()
     X.drop(columns=dropped, errors='ignore', inplace=True)
     col_new = set(X.columns)
     logger.info("{} features have more than 95% zeros. Dropped {}."
@@ -43,20 +44,19 @@ def main(processed_path = "data/processed"):
     
     # drop features with less than 5% unique values
     col_old = set(X.columns)
-    dropped = df.columns[(df.nunique()/n < .05).values]
+    dropped = cleaned_df.columns[(cleaned_df.nunique()/n < .05).values]
     X.drop(columns=dropped, errors='ignore', inplace=True)
     col_new = set(X.columns)
     logger.info("{} features have less than 5% unique values. Dropped {}."
                 .format(len(dropped), len(col_old)-len(col_new)))
     for drop in col_old-col_new:
         logger.debug("Dropped: {}".format(drop))
-    
         
-    # drop features with too little relative standard deviation
-    list(X.std()/X.mean())
-    
-    
     # remove multi-collinearity
+    
+    vif = pd.Series(data = [variance_inflation_factor(X.values, i)
+                            for i in range(X.shape[1])],
+                    index = X.columns)
     
     #%% export selected_df as pickle file to processed folder
     selected_df = pd.concat([y, X], axis=1)

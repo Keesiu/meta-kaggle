@@ -7,6 +7,7 @@ from time import time
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
+import statsmodels.api as sm
 
 
 def main(processed_path = "data/processed",
@@ -49,6 +50,10 @@ def main(processed_path = "data/processed",
     
     plt.plot(X, lr.predict(X))
     plt.show()
+    
+    mod = sm.OLS(y.Score, X)
+    res = mod.fit()
+    print(res.summary())    
     
 #%%
 if __name__ == '__main__':

@@ -44,7 +44,7 @@ def main(processed_path = "data/processed"):
     
     # drop features with less than 5% unique values
     col_old = set(X.columns)
-    dropped = cleaned_df.columns[(cleaned_df.nunique()/n < .05).values]
+    dropped = cleaned_df.columns[(cleaned_df.nunique()/n < .05).values].tolist()
     X.drop(columns=dropped, errors='ignore', inplace=True)
     col_new = set(X.columns)
     logger.info("{} features have less than 5% unique values. Dropped {}."
@@ -52,11 +52,54 @@ def main(processed_path = "data/processed"):
     for drop in col_old-col_new:
         logger.debug("Dropped: {}".format(drop))
         
-    # remove multi-collinearity
+    # remove multi-collinearity through VIF
+    def drop_max_vif(X, logger, steps=-1):
+        vif = pd.Series(data = [variance_inflation_factor(X.values, i)
+                                for i in range(X.shape[1])],
+                        index = X.columns)
+        if vif.max() < 5 or steps == 0:
+            return X
+        else:
+            drop = vif.idxmax()
+            logger.error("Dropped {} (VIF = {}).".format(drop, vif[drop]))
+            return drop_max_vif(X.drop(columns=drop), logger, steps-1)
+    X = drop_max_vif(X, logger, steps=1)
+    
+    everything = set(X.columns)
+    loc_max = {'loc_max'}
+    radon = {x for x in X.columns if 'radon' in x}
+    radon_h = {x for x in X.columns if 'radon_h' in x}
+    radon_mi = {x for x in X.columns if 'radon_mi' in x}
+    radon_raw = {x for x in X.columns if 'radon_raw' in x}
+    radon_cc = {x for x in X.columns if '_cc' in x}
+    pylint = {x for x in X.columns if 'pylint' in x}
+    pylint_raw = {'pylint_code_ratio',
+                  'pylint_docstring_ratio',
+                  'pylint_comment_ratio',
+                  'pylint_empty_ratio'}
+    pylint_dup = {'pylint_nb_duplicated_lines_ratio'}
+    pylint_cat = {'pylint_convention_ratio',
+                  'pylint_refactor_ratio',
+                  'pylint_warning_ratio',
+                  'pylint_error_ratio'}
+    pylint_rest = pylint - pylint_raw - pylint_dup - pylint_cat
+
+    mask = everything - pylint_rest - pylint_dup - {'radon_h_h1_ratio',
+                                                    'radon_h_h2_ratio',
+                                                    'radon_h_N1_ratio',
+                                                    'radon_h_N2_ratio',
+                                                    'loc_max',
+                                                    'radon_h_effort_ratio'}
+    X = X.loc[:, list(mask)]
+    X = drop_max_vif(X, logger)
     
     vif = pd.Series(data = [variance_inflation_factor(X.values, i)
                             for i in range(X.shape[1])],
                     index = X.columns)
+    X.drop(columns=X.columns[vif.isna().values], inplace=True)
+    
+
+    
     
     #%% export selected_df as pickle file to processed folder
     selected_df = pd.concat([y, X], axis=1)

@@ -8,6 +8,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
+from statsmodels.formula.api import ols
 
 
 def main(processed_path = "data/processed",
@@ -54,6 +55,10 @@ def main(processed_path = "data/processed",
     mod = sm.OLS(y.Score, X)
     res = mod.fit()
     print(res.summary())    
+    
+    model = ols("Score ~ radon_sum_cc_ratio + pylint_class_ratio", cleaned_df)
+    results = model.fit()
+    results.summary()
     
 #%%
 if __name__ == '__main__':

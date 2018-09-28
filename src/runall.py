@@ -10,6 +10,7 @@ if '' not in sys.path:
 
 from src.data import download, reduce, table
 from src.features import extract, aggregate, clean
+from src.models import select
 
 
 def main(metadata_path, repos_path, interim_path, processed_path):
@@ -39,15 +40,20 @@ def main(metadata_path, repos_path, interim_path, processed_path):
     extract.main(interim_path)
     logging.info("Finished extract.py.")
     
-    # aggregates extracted source code metrics to aggregated_df
+    # aggregates extracted features to repo level and saves to aggregated_df
     logging.info("Starting aggregate.py.")
     aggregate.main(metadata_path, interim_path)
     logging.info("Finished aggregate.py.")
     
-    # cleans aggregated source code metrics to cleaned_df
+    # cleans aggregated features to become meaningful and saves to cleaned_df
     logging.info("Starting clean.py.")
     clean.main(interim_path, processed_path)
     logging.info("Finished clean.py.")
+    
+    # selects relevant cleaned features for modeling and saves to selected_df
+    logging.info("Starting select.py.")
+    select.main(processed_path)
+    logging.info("Finished select.py.")
 
 
 if __name__ == '__main__':

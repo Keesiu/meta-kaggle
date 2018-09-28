@@ -9,7 +9,7 @@ if '' not in sys.path:
     sys.path.insert(0, '')
 
 from src.data import download, reduce, table
-from src.features import extract, aggregate
+from src.features import extract, aggregate, clean
 
 
 def main(metadata_path, repos_path, interim_path, processed_path):
@@ -39,10 +39,15 @@ def main(metadata_path, repos_path, interim_path, processed_path):
     extract.main(interim_path)
     logging.info("Finished extract.py.")
     
-    # aggregates source code metrics from extracted_df to aggregated_df
+    # aggregates extracted source code metrics to aggregated_df
     logging.info("Starting aggregate.py.")
     aggregate.main(metadata_path, interim_path)
     logging.info("Finished aggregate.py.")
+    
+    # cleans aggregated source code metrics to cleaned_df
+    logging.info("Starting clean.py.")
+    clean.main(interim_path, processed_path)
+    logging.info("Finished clean.py.")
 
 
 if __name__ == '__main__':

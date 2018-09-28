@@ -13,7 +13,7 @@ def main(interim_path = "data/interim"):
     
     """Extracts all features from the source codes.
     
-    Output features_df includes following source code metrics:
+    Output extracted_df includes following source code metrics:
         Radon:
         - Raw metrics
         - Cyclomatic Complexity metrics
@@ -36,54 +36,54 @@ def main(interim_path = "data/interim"):
     interim_path = os.path.normpath(interim_path)
     logger.debug("Path to iterim data normalized: {}".format(interim_path))
     
-    # load scripts_df and create copy for storing features
-    scripts_df = pd.read_pickle(os.path.join(interim_path, 'scripts_df.pkl'))
-    features_df = scripts_df[['repo_id']].copy()
-    logger.info("Created features_df.")
+    # load tabled_df and create copy for storing features
+    tabled_df = pd.read_pickle(os.path.join(interim_path, 'tabled_df.pkl'))
+    extracted_df = tabled_df[['repo_id']].copy()
+    logger.info("Created extracted_df.")
 
     # start extracting source code metrics
     start = time()
-    n = len(features_df)
+    n = len(extracted_df)
     
     #%% length of content
-    features_df['content_len'] = scripts_df.content.map(len)
+    extracted_df['content_len'] = tabled_df.content.map(len)
     logger.info("Extracted content length 'content_len'.")
     
     #%% radon raw metrics
     logger.info("Start extracting radon raw metrics.")
     # extraction
-    radon_raw = [try_radon_raw(scripts_df.content, index, logger) 
-                for index in scripts_df.index]
-    # save results to features_df
-    (features_df['radon_raw_loc'],
-     features_df['radon_raw_lloc'],
-     features_df['radon_raw_sloc'],
-     features_df['radon_raw_comments'],
-     features_df['radon_raw_multi'],
-     features_df['radon_raw_blank'],
-     features_df['radon_raw_single_comments']) = zip(*radon_raw)
+    radon_raw = [try_radon_raw(tabled_df.content, index, logger) 
+                for index in tabled_df.index]
+    # save results to extracted_df
+    (extracted_df['radon_raw_loc'],
+     extracted_df['radon_raw_lloc'],
+     extracted_df['radon_raw_sloc'],
+     extracted_df['radon_raw_comments'],
+     extracted_df['radon_raw_multi'],
+     extracted_df['radon_raw_blank'],
+     extracted_df['radon_raw_single_comments']) = zip(*radon_raw)
     # set is_error flag
-    features_df['radon_raw_is_error'] = features_df.radon_raw_loc.isna()
+    extracted_df['radon_raw_is_error'] = extracted_df.radon_raw_loc.isna()
     # logging results
-    n_radon_raw_error = features_df.radon_raw_is_error.sum()
-    n_radon_raw_success = sum(features_df.radon_raw_loc >= 0)
+    n_radon_raw_error = extracted_df.radon_raw_is_error.sum()
+    n_radon_raw_success = sum(extracted_df.radon_raw_loc >= 0)
     logger.info("Extracted radon raw metrics: {} scripts, {} successes, {} errors."
                 .format(n, n_radon_raw_success, n_radon_raw_error))
     
     #%% radon cyclomatic complexity metrics
     logger.info("Start extracting radon cyclomatic complexity metrics.")
     # extraction
-    radon_cc = [try_radon_cc(scripts_df.content, index, logger)
-                for index in scripts_df.index]
-    # save results to features_df
-    features_df['radon_cc_mean'] = list(
+    radon_cc = [try_radon_cc(tabled_df.content, index, logger)
+                for index in tabled_df.index]
+    # save results to extracted_df
+    extracted_df['radon_cc_mean'] = list(
                         map(radon.complexity.average_complexity, radon_cc))
-    features_df['radon_cc_sum'] = [sum([obj.complexity for obj in blocks])
+    extracted_df['radon_cc_sum'] = [sum([obj.complexity for obj in blocks])
                                     for blocks in radon_cc]
     # set is_error flag
-    features_df['radon_cc_is_error'] = [isinstance(x, str) for x in radon_cc]
+    extracted_df['radon_cc_is_error'] = [isinstance(x, str) for x in radon_cc]
     # logging results
-    n_radon_cc_error = sum(features_df.radon_cc_is_error)
+    n_radon_cc_error = sum(extracted_df.radon_cc_is_error)
     n_radon_cc_success = sum([isinstance(x, list) for x in radon_cc])
     logger.info("Extracted radon cyclomatic complexity metrics: {} scripts, {} successes, {} errors."
                 .format(n, n_radon_cc_success, n_radon_cc_error))
@@ -91,70 +91,70 @@ def main(interim_path = "data/interim"):
     #%% radon halstead metrics
     logger.info("Start extracting radon halstead metrics.")
     # extraction
-    radon_h = [try_radon_h(scripts_df.content, index, logger)
-                for index in scripts_df.index]
-    # save results to features_df
-    (features_df['radon_h_h1'],
-     features_df['radon_h_h2'],
-     features_df['radon_h_N1'],
-     features_df['radon_h_N2'],
-     features_df['radon_h_vocabulary'],
-     features_df['radon_h_length'],
-     features_df['radon_h_calculated_length'],
-     features_df['radon_h_volume'],
-     features_df['radon_h_difficulty'],
-     features_df['radon_h_effort'],
-     features_df['radon_h_time'],
-     features_df['radon_h_bugs']) = zip(*radon_h)
+    radon_h = [try_radon_h(tabled_df.content, index, logger)
+                for index in tabled_df.index]
+    # save results to extracted_df
+    (extracted_df['radon_h_h1'],
+     extracted_df['radon_h_h2'],
+     extracted_df['radon_h_N1'],
+     extracted_df['radon_h_N2'],
+     extracted_df['radon_h_vocabulary'],
+     extracted_df['radon_h_length'],
+     extracted_df['radon_h_calculated_length'],
+     extracted_df['radon_h_volume'],
+     extracted_df['radon_h_difficulty'],
+     extracted_df['radon_h_effort'],
+     extracted_df['radon_h_time'],
+     extracted_df['radon_h_bugs']) = zip(*radon_h)
     # set is_error flag
-    features_df['radon_h_is_error'] = features_df.radon_h_h1.isna()
+    extracted_df['radon_h_is_error'] = extracted_df.radon_h_h1.isna()
     # logging results
-    n_radon_h_error = features_df.radon_h_is_error.sum()
-    n_radon_h_success = sum(features_df.radon_h_h1 >= 0)
+    n_radon_h_error = extracted_df.radon_h_is_error.sum()
+    n_radon_h_success = sum(extracted_df.radon_h_h1 >= 0)
     logger.info("Extracted radon halstead metrics: {} scripts, {} successes, {} errors."
                 .format(n, n_radon_h_success, n_radon_h_error))
     
     #%% radon maintainability index metric
     logger.info("Start extracting radon maintainability index metric.")
     # extraction
-    radon_mi = [try_radon_mi(scripts_df.content, index, logger)
-                for index in scripts_df.index]
-    # save results to features_df
-    features_df['radon_mi'] = radon_mi
+    radon_mi = [try_radon_mi(tabled_df.content, index, logger)
+                for index in tabled_df.index]
+    # save results to extracted_df
+    extracted_df['radon_mi'] = radon_mi
     #set is_error flag
-    features_df['radon_mi_is_error'] = features_df.radon_mi.isna()
+    extracted_df['radon_mi_is_error'] = extracted_df.radon_mi.isna()
     # logging results
-    n_radon_mi_error = features_df.radon_mi_is_error.sum()
-    n_radon_mi_success = sum(features_df.radon_mi >= 0)
+    n_radon_mi_error = extracted_df.radon_mi_is_error.sum()
+    n_radon_mi_success = sum(extracted_df.radon_mi >= 0)
     logger.info("Extracted radon maintainability index metric: {} scripts, {} successes, {} errors."
                 .format(n, n_radon_mi_success, n_radon_mi_error))
     
     #%% pylint
     logger.info("Start extracting pylint metrics.")
     # extraction
-    counters = [try_pylint(scripts_df, index, logger)
-                for index in scripts_df.index]
+    counters = [try_pylint(tabled_df, index, logger)
+                for index in tabled_df.index]
     pylint = pd.DataFrame(counters)
     # drop 'percent duplicated lines', already have 'nb duplicated lines'
     pylint.drop(columns='percent duplicated lines', inplace=True)
     # align column naming
     pylint.rename(lambda x: "pylint_" + x.replace('-', '_').replace(' ', '_'),
                 axis = 1, inplace=True)
-    # save results to features_df
-    features_df = pd.concat([features_df, pylint], axis=1)
+    # save results to extracted_df
+    extracted_df = pd.concat([extracted_df, pylint], axis=1)
     #set is_error flag
-    features_df['pylint_is_error'] = [counter == collections.Counter()
+    extracted_df['pylint_is_error'] = [counter == collections.Counter()
                                         for counter in counters]
     # logging results
-    n_radon_pylint_error = features_df.pylint_is_error.sum()
+    n_radon_pylint_error = extracted_df.pylint_is_error.sum()
     n_radon_pylint_success = n-n_radon_pylint_error
     logger.info("Extracted pylint metrics: {} scripts, {} successes, {} errors."
                 .format(n, n_radon_pylint_success, n_radon_pylint_error))
     
-    #%% export features_df as pickle file to interim folder
-    features_df.to_pickle(os.path.join(interim_path, 'features_df.pkl'))
+    #%% export extracted_df as pickle file to interim folder
+    extracted_df.to_pickle(os.path.join(interim_path, 'extracted_df.pkl'))
     logger.info("Saved script_df to {}."
-                .format(os.path.join(interim_path, 'features_df.pkl')))
+                .format(os.path.join(interim_path, 'extracted_df.pkl')))
     
     #%% logging time passed
     end = time()
@@ -271,7 +271,7 @@ if __name__ == '__main__':
     parser.add_argument(
             '--interim_path',
             default = "data/interim",
-            help = "path to store the output features_df.pkl \
+            help = "path to store the output extracted_df.pkl \
                     (default: data/interim)")
     args = parser.parse_args()
     

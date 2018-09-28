@@ -24,24 +24,24 @@ def main(metadata_path, repos_path, interim_path, processed_path):
     download.main(metadata_path, repos_path)
     logging.info("Finished download.py.")
     
-    # cleans Github repositories by deleting every non-Python file
+    # reduces Github repositories data by deleting every non-Python file
     logging.info("Starting reduce.py.")
     reduce.main(repos_path)
     logging.info("Finished reduce.py.")
     
-    # tables the external scripts and their content to scripts_df
+    # tables the external data and their source code content to tabled_df
     logging.info("Starting table.py.")
     table.main(repos_path, interim_path)
     logging.info("Finished table.py.")
     
-    # extracts source code metrics from script content to features_df
+    # extracts source code metrics from script content to extracted_df
     logging.info("Starting extract.py.")
     extract.main(interim_path)
     logging.info("Finished extract.py.")
     
-    # aggregate source code metrics from features_df to repos_df
+    # aggregates source code metrics from extracted_df to aggregated_df
     logging.info("Starting aggregate.py.")
-    aggregate.main(metadata_path, interim_path, processed_path)
+    aggregate.main(metadata_path, interim_path)
     logging.info("Finished aggregate.py.")
 
 
@@ -60,22 +60,22 @@ if __name__ == '__main__':
     parser.add_argument(
             '--metadata_path',
             default = "data/raw/meta-kaggle-2016",
-            help = "path to Kaggle Meta Dataset 2016, where Teams.csv is \
+            help = "path to Kaggle Meta Dataset 2016 \
                     (default: data/raw/meta-kaggle-2016)")
     parser.add_argument(
             '--repos_path',
             default = "data/external/repositories",
-            help = "path to store downloaded repositories \
+            help = "path to downloaded repositories \
                     (default: data/external/repositories)")
     parser.add_argument(
             '--interim_path',
             default = "data/interim",
-            help = "path to store the output features_df.pkl \
+            help = "path to interim data: tabled_df, extracted_df, aggregated_df \
                     (default: data/interim)")
     parser.add_argument(
             '--processed_path',
             default = "data/processed",
-            help = "path to store the aggregated output repos_df.pkl \
+            help = "path to processed data: cleaned_df, selected_df \
                     (default: data/processed)")
     args = parser.parse_args()
     

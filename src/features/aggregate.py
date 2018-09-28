@@ -34,16 +34,16 @@ def main(metadata_path = "data/raw/meta-kaggle-2016",
     logger.info("Loaded Team.csv with {} repositories."
                 .format(len(teams_df)))
     
-    # load features_df
-    features_df = pd.read_pickle(os.path.join(interim_path, 'features_df.pkl'))
-    logger.info("Loaded features_df.pkl with {} files."
-                .format(len(features_df)))
+    # load extracted_df
+    extracted_df = pd.read_pickle(os.path.join(interim_path, 'extracted_df.pkl'))
+    logger.info("Loaded extracted_df.pkl with {} files."
+                .format(len(extracted_df)))
     
     # start aggregation
     start = time()
     
     # reduces teams_df by filtering for repos with python scripts
-    ids_counter = collections.Counter(features_df['repo_id'])
+    ids_counter = collections.Counter(extracted_df['repo_id'])
     ids_set = set(ids_counter)
     in_features = [repo_id in ids_set for repo_id in teams_df['Id'].tolist()]
     teams_df = teams_df[in_features].set_index('Id')
@@ -55,15 +55,15 @@ def main(metadata_path = "data/raw/meta-kaggle-2016",
     logger.info("Added column 'n_scripts' which is the number of scripts.")
     
     # transform boolean columns (like _is_error flags) to integer
-    n_bool = len(features_df.select_dtypes('bool').columns)
-    for col in features_df.select_dtypes('bool').columns:
-        features_df[col] = features_df[col].astype(int)
-    logger.info("Turned {} boolean columns of features_df to integer."
+    n_bool = len(extracted_df.select_dtypes('bool').columns)
+    for col in extracted_df.select_dtypes('bool').columns:
+        extracted_df[col] = extracted_df[col].astype(int)
+    logger.info("Turned {} boolean columns of extracted_df to integer."
                  .format(n_bool))
     
-    # splits features_df along 'repo_id'
-    grouped = features_df.groupby('repo_id')
-    logger.info("Splitted features_df into groups along repo_id.")
+    # splits extracted_df along 'repo_id'
+    grouped = extracted_df.groupby('repo_id')
+    logger.info("Splitted extracted_df into groups along repo_id.")
     
     # aggregate features
     repos = {}
@@ -74,21 +74,21 @@ def main(metadata_path = "data/raw/meta-kaggle-2016",
             # calculate relevant statistics
             stats.extend([group[col_name].sum(), group[col_name].mean()])
         repos[repo_id] = stats
-    columns = list(itertools.product(features_df.columns[1:], ['sum', 'mean']))
+    columns = list(itertools.product(extracted_df.columns[1:], ['sum', 'mean']))
     # build aggregated_df from dict repos
     aggregated_df = pd.DataFrame.from_dict(repos,
                                            orient='index',
                                            columns=columns)
     logger.info("{} features per script aggregated to {} features per repository (x2 because sum and mean)."
-                .format(features_df.shape[1]-1, aggregated_df.shape[1]))
+                .format(extracted_df.shape[1]-1, aggregated_df.shape[1]))
     
     # concatenates teams_df with aggregated_df
     aggregated_df = pd.concat([teams_df, aggregated_df], axis=1)
-    logger.info("Combined aggregated features with repos_df.")
+    logger.info("Combined aggregated features with teams_df.")
     
     # export aggregated_df as pickle file to interim folder
     aggregated_df.to_pickle(os.path.join(interim_path, 'aggregated_df.pkl'))
-    logger.info("Saved repos_df to {}."
+    logger.info("Saved aggregated_df to {}."
             .format(os.path.join(interim_path, 'aggregated_df.pkl')))
     
     # logging time passed
@@ -117,7 +117,7 @@ if __name__ == '__main__':
     parser.add_argument(
             '--interim_path',
             default = "data/interim",
-            help = "path to extracted features features_df.pkl \
+            help = "path to to load extracted_df and store aggregated_df \
                     (default: data/interim)")
     args = parser.parse_args()
     

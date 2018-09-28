@@ -8,9 +8,9 @@ from time import time
 def main(repos_path = "data/external/repositories",
          interim_path = "data/interim"):
     
-    """Tables external python scripts and their content.
+    """Tables external python scripts and their content to tabled_df.
     
-    Outputs scripts_df as DataFrame with 4 columns:
+    Outputs tabled_df as DataFrame with 4 columns:
     repo_id: the respective repository ID of the script from Team.csv
     path: path to the script file
     name: name to the script file
@@ -53,14 +53,14 @@ def main(repos_path = "data/external/repositories",
         content.append(temp)
     
     # store into pandas Dataframe and pickle
-    scripts_df = pd.DataFrame(data={'repo_id' : repo_id,
-                                    'path' : path,
-                                    'name' : name,
-                                    'content' : content})
+    tabled_df = pd.DataFrame(data={'repo_id' : repo_id,
+                                   'path' : path,
+                                   'name' : name,
+                                   'content' : content})
     logger.info("Created script_df.")
-    scripts_df.to_pickle(os.path.join(interim_path, 'scripts_df.pkl'))
+    tabled_df.to_pickle(os.path.join(interim_path, 'tabled_df.pkl'))
     logger.info("Saved script_df to {}."
-                .format(os.path.join(interim_path, 'scripts_df.pkl')))
+                .format(os.path.join(interim_path, 'tabled_df.pkl')))
     
     # logging time passed
     end = time()
@@ -88,7 +88,7 @@ if __name__ == '__main__':
     parser.add_argument(
             '--interim_path',
             default = "data/interim",
-            help = "path to store the output scripts_df.pkl \
+            help = "path to store the output tabled_df.pkl \
                     (default: data/interim)")
     args = parser.parse_args()
     

@@ -27,36 +27,43 @@ def main(processed_path = "data/processed",
     logger.debug("Path to models normalized: {}"
                  .format(models_path))
     
-    # load df
-    df = pd.read_pickle(os.path.join(processed_path, 'df.pkl'))
-    logger.info("Loaded df.pkl. Shape of df: {}"
-                .format(df.shape))
+    # load selected_df
+    selected_df = pd.read_pickle(os.path.join(processed_path, 'selected_df.pkl'))
+    logger.info("Loaded selected_df.pkl. Shape of selected_df: {}"
+                .format(selected_df.shape))
+    
+    # split df into dependent and independent variables
+    y, X = np.split(selected_df, [2], axis=1)
     
     #%% start training
     start = time()
     
-    y, X = np.split(df, [1], axis=1)
+#    # train-test-split
+#    X_train, X_test, y_train, y_test  = train_test_split(
+#            X, y, test_size=0.3, random_state=42)
     
-    X_train, X_test, y_train, y_test  = train_test_split(
-            X, y, test_size=0.3, random_state=42)
     
-    # logistic regression
+#    # Linear regression with sklearn
+#    lr = LinearRegression()
+#    lr.fit(X_train, y_train)
+#    lr.score(X_test, y_test)
+#    lr.get_params()
+#    lr.coef_
+#    plt.plot(X, lr.predict(X))
+#    plt.show()
     
-    # Linear regression
-    lr = LinearRegression()
-    lr.fit(X_train, y_train)
-    lr.score(X_test, y_test)
-    lr.get_params()
-    lr.coef_
+    # Linear regression with statsmodels
+    mod = sm.OLS(y.ranking_log, sm.add_constant(X))
+    res = mod.fit_regularized(method='elastic_net', L1_wt=1)
+    print(res.summary())
     
-    plt.plot(X, lr.predict(X))
-    plt.show()
+    # logistic regression with statsmodels
+    mod = sm.Logit(y.score, sm.add_constant(X))
+    res = mod.fit_regularized(method='l1', alpha=.62)
+    print(res.summary())
     
-    mod = sm.OLS(y.Score, X)
-    res = mod.fit()
-    print(res.summary())    
-    
-    model = ols("Score ~ radon_sum_cc_ratio + pylint_class_ratio", cleaned_df)
+    # LR with statsmodels in R-style
+    model = ols("Ranking ~ radon_sum_cc_ratio + pylint_class_ratio", selected_df)
     results = model.fit()
     results.summary()
     
@@ -76,7 +83,7 @@ if __name__ == '__main__':
     parser.add_argument(
             '--processed_path',
             default = "data/processed",
-            help = "path to load the cleaned data df.pkl \
+            help = "path to load the selected data selected_df.pkl \
                     (default: data/processed)")
     parser.add_argument(
             '--models_path',

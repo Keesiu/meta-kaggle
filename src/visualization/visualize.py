@@ -6,7 +6,11 @@ import seaborn as sns
 sns.set_context('paper')
 
 # score and ranking
-sns.scatterplot(x=df.Score, y=df.Ranking)
+sns.scatterplot(x=y.Score, y=y.Ranking)
+
+# histogram
+sns.distplot(y.Score)
+sns.distplot(y.Ranking)
 
 # correlation coefficient matrix
 corr = X.corr()

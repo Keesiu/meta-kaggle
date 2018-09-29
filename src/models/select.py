@@ -4,6 +4,8 @@ import os, logging, argparse
 import pandas as pd
 import numpy as np
 from time import time
+from scipy.stats import pearsonr
+from sklearn.feature_selection import f_regression, SelectKBest
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 
@@ -24,47 +26,12 @@ def main(processed_path = "data/processed"):
     logger.info("Loaded cleaned_df.pkl. Shape of df: {}"
                 .format(cleaned_df.shape))
     
+    #%% pre-work
+    
     # split df into dependent and independent variables
     y, X = np.split(cleaned_df, [2], axis=1)
     
-    #%% start feature selection
-    start = time()
-    
-    n = len(X)
-    
-    # drop features with more than 95% zeros
-    col_old = set(X.columns)
-    dropped = cleaned_df.columns[(((cleaned_df == 0).sum()/n) > .95).values].tolist()
-    X.drop(columns=dropped, errors='ignore', inplace=True)
-    col_new = set(X.columns)
-    logger.info("{} features have more than 95% zeros. Dropped {}."
-                .format(len(dropped), len(col_old)-len(col_new)))
-    for drop in col_old-col_new:
-        logger.debug("Dropped: {}".format(drop))
-    
-    # drop features with less than 5% unique values
-    col_old = set(X.columns)
-    dropped = cleaned_df.columns[(cleaned_df.nunique()/n < .05).values].tolist()
-    X.drop(columns=dropped, errors='ignore', inplace=True)
-    col_new = set(X.columns)
-    logger.info("{} features have less than 5% unique values. Dropped {}."
-                .format(len(dropped), len(col_old)-len(col_new)))
-    for drop in col_old-col_new:
-        logger.debug("Dropped: {}".format(drop))
-        
-    # remove multi-collinearity through VIF
-    def drop_max_vif(X, logger, steps=-1):
-        vif = pd.Series(data = [variance_inflation_factor(X.values, i)
-                                for i in range(X.shape[1])],
-                        index = X.columns)
-        if vif.max() < 5 or steps == 0:
-            return X
-        else:
-            drop = vif.idxmax()
-            logger.error("Dropped {} (VIF = {}).".format(drop, vif[drop]))
-            return drop_max_vif(X.drop(columns=drop), logger, steps-1)
-    X = drop_max_vif(X, logger, steps=1)
-    
+    # sets vocabulary for subsets of features
     everything = set(X.columns)
     loc_max = {'loc_max'}
     radon = {x for x in X.columns if 'radon' in x}
@@ -83,7 +50,60 @@ def main(processed_path = "data/processed"):
                   'pylint_warning_ratio',
                   'pylint_error_ratio'}
     pylint_rest = pylint - pylint_raw - pylint_dup - pylint_cat
+    
+    #%% univariate feature selection
+    start = time()
+    
+    # drop features with more than 50% zeros
+    n = len(X)
+    dropped = set()
+    col_old = set(X.columns)
+    drop_now = cleaned_df.columns[(cleaned_df == 0).sum() / n > .5]
+    X.drop(columns=drop_now, errors='ignore', inplace=True)
+    dropped.update(drop_now)
+    col_new = set(X.columns)
+    for drop in col_old-col_new:
+        logger.debug("Dropped: {}".format(drop))
+    logger.info("{} features have more than 50% zeros. Dropped {}."
+                .format(len(drop_now), len(col_old)-len(col_new)))
+    if not all([d in pylint_rest for d in dropped]):
+        logger.warning("Dropped some higher level features: {}"
+                       .format([d for d in dropped if d not in pylint_rest]))
+    #%%
+    # compute Pearson correlation coefficient and
+    # p-value for testing non-correlation (not reliable for small datasets)
+    corr_score = pd.DataFrame(
+            data = [list(pearsonr(X[x], y.score)) for x in X],
+            index = X.columns,
+            columns = ['corr_coeff', 'p_value'])
+    corr_ranking_log = pd.DataFrame(
+            data = [list(pearsonr(X[x], y.ranking_log)) for x in X],
+            index = X.columns,
+            columns = ['corr_coeff', 'p_value'])
+    
+    # compute f_scores
+    f_score, pval = f_regression(X, y.score)    
+    f_score_df = pd.DataFrame(
+            data = {'f_score' : f_score,
+                    'pval' : pval},
+            index = X.columns)
+    f_score, pval = f_regression(X, y.ranking_log)
+    f_ranking_log_df = pd.DataFrame(
+            data = {'f_score' : f_score,
+                    'pval' : pval},
+            index = X.columns)
+    del f_score, pval
+    
+    selector = SelectKBest(f_regression, k=10)
+    selector.fit(X, y.score)
+    mask = selector.get_support()
+    X = X.loc[:, mask]
+    
 
+    # coefficient of variation (ratio of biased standard deviation to mean)
+    X.std()/X.mean()
+    
+    # dropping features manually by domain knowledge
     mask = everything - pylint_rest - pylint_dup - {'radon_h_h1_ratio',
                                                     'radon_h_h2_ratio',
                                                     'radon_h_N1_ratio',
@@ -91,15 +111,24 @@ def main(processed_path = "data/processed"):
                                                     'loc_max',
                                                     'radon_h_effort_ratio'}
     X = X.loc[:, list(mask)]
-    X = drop_max_vif(X, logger)
+
+    #%% multivariate feature selection
     
+    # remove multi-collinearity through VIF
+    def drop_max_vif(X, logger, steps=-1):
+        vif = pd.Series(data = [variance_inflation_factor(X.values, i)
+                                for i in range(X.shape[1])],
+                        index = X.columns)
+        if vif.max() < 5 or steps == 0:
+            return X
+        else:
+            drop = vif.idxmax()
+            logger.warning("Dropped {} (VIF = {}).".format(drop, vif[drop]))
+            return drop_max_vif(X.drop(columns=drop), logger, steps-1)
+    X = drop_max_vif(X, logger)
     vif = pd.Series(data = [variance_inflation_factor(X.values, i)
                             for i in range(X.shape[1])],
                     index = X.columns)
-    X.drop(columns=X.columns[vif.isna().values], inplace=True)
-    
-
-    
     
     #%% export selected_df as pickle file to processed folder
     selected_df = pd.concat([y, X], axis=1)

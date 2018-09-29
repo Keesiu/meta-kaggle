@@ -176,12 +176,12 @@ def main(interim_path = "data/interim",
     # drop second level of MultiIndex
     cleaned_df.columns = cleaned_df.columns.droplevel(level=1)    
     
-    # concatenate cleaned_df with Score and Ranking
+    # concatenate cleaned_df with Score and log-transfomated Ranking
     cleaned_df = pd.concat([pd.to_numeric(teams_df.Score),
-                    pd.to_numeric(teams_df.Ranking),
-                    cleaned_df],
-                    join='inner', axis=1)
-    logger.info("Concatenated cleaned_df with Score and Ranking. Shape: {}"
+                            np.log(pd.to_numeric(teams_df.Ranking)),
+                            cleaned_df],
+                            join='inner', axis=1)
+    logger.info("Concatenated 'Score' and log-transformed 'Ranking'. Shape: {}"
                 .format(cleaned_df.shape))
     
     # drop repos with outlying scores

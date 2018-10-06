@@ -146,10 +146,10 @@ def main(interim_path = "data/interim"):
     extracted_df['pylint_is_error'] = [counter == collections.Counter()
                                         for counter in counters]
     # logging results
-    n_radon_pylint_error = extracted_df.pylint_is_error.sum()
-    n_radon_pylint_success = n-n_radon_pylint_error
+    n_pylint_error = extracted_df.pylint_is_error.sum()
+    n_pylint_success = n-n_pylint_error
     logger.info("Extracted pylint metrics: {} scripts, {} successes, {} errors."
-                .format(n, n_radon_pylint_success, n_radon_pylint_error))
+                .format(n, n_pylint_success, n_pylint_error))
     
     #%% export extracted_df as pickle file to interim folder
     extracted_df.to_pickle(os.path.join(interim_path, 'extracted_df.pkl'))

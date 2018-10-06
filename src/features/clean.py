@@ -59,7 +59,7 @@ def main(interim_path = "data/interim",
                 .format(cleaned_df.shape))
     
     # re-include relevant columns from means
-    cleaned_df = pd.concat([features_df[('radon_avg_cc', 'mean')],
+    cleaned_df = pd.concat([features_df[('radon_cc_mean', 'mean')],
                             features_df[('radon_mi_mean', 'mean')],
                             features_df[('radon_raw_is_error', 'mean')],
                             features_df[('radon_cc_is_error', 'mean')],
@@ -75,9 +75,9 @@ def main(interim_path = "data/interim",
     logger.info("Dropped column (content_len, sum). Shape: {}"
                 .format(cleaned_df.shape))
     
-    # drop column (radon_avg_cc, sum) since it doesn't make sense
-    cleaned_df.drop([('radon_avg_cc', 'sum')], axis=1, inplace=True)
-    logger.info("Dropped column (radon_avg_cc, sum). Shape: {}"
+    # drop column (radon_cc_mean, sum) since it doesn't make sense
+    cleaned_df.drop([('radon_cc_mean', 'sum')], axis=1, inplace=True)
+    logger.info("Dropped column (radon_cc_mean, sum). Shape: {}"
                 .format(cleaned_df.shape))
     
     # drop halstead metrics since they are not additive thus wrong

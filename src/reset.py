@@ -21,6 +21,10 @@ def main(repos_path = "data/external/repositories",
     if os.path.exists(repos_path):
         shutil.rmtree(repos_path)
     
+    # delete all 2to3-transformed repositories
+    if os.path.exists(repos_path + '_2to3'):
+        shutil.rmtree(repos_path + '_2to3')
+    
     # delete all pickle files in interim data
     for file in os.listdir(interim_path):
         if file[-4:] == '.pkl':

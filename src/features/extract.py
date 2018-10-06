@@ -45,10 +45,6 @@ def main(interim_path = "data/interim"):
     start = time()
     n = len(extracted_df)
     
-    #%% length of content
-    extracted_df['content_len'] = tabled_df.content.map(len)
-    logger.info("Extracted content length 'content_len'.")
-    
     #%% radon raw metrics
     logger.info("Start extracting radon raw metrics.")
     # extraction

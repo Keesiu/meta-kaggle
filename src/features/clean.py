@@ -70,11 +70,6 @@ def main(interim_path = "data/interim",
     logger.info("Re-included 7 relevant 'mean' features. Shape: {}"
                 .format(cleaned_df.shape))
     
-    # drop column (content_len, sum) since it's irrelevant
-    cleaned_df.drop([('content_len', 'sum')], axis=1, inplace=True)
-    logger.info("Dropped column (content_len, sum). Shape: {}"
-                .format(cleaned_df.shape))
-    
     # drop column (radon_cc_mean, sum) since it doesn't make sense
     cleaned_df.drop([('radon_cc_mean', 'sum')], axis=1, inplace=True)
     logger.info("Dropped column (radon_cc_mean, sum). Shape: {}"

@@ -8,7 +8,7 @@ import sys, logging, argparse
 if '' not in sys.path:
     sys.path.insert(0, '')
 
-from src.data import download, reduce, 2to3, table
+from src.data import download, reduce, translate2to3, table
 from src.features import extract, aggregate, clean
 from src.models import select
 
@@ -30,12 +30,12 @@ def main(metadata_path, repos_path, interim_path, processed_path):
     reduce.main(repos_path)
     logging.info("Finished reduce.py.")
     
-    # transforms the external Python scripts from version 2.x to 3.x
+    # translates the external Python scripts from version 2.x to 3.x
     logging.info("Starting 2to3.py.")
-    2to3.main(repos_path)
+    translate2to3.main(repos_path)
     logging.info("Finished 2to3.py.")
     
-    # tables the 2to3-transformed scripts to tabled_df
+    # tables the 2to3-translated scripts to tabled_df
     logging.info("Starting table.py.")
     table.main(repos_path, interim_path)
     logging.info("Finished table.py.")

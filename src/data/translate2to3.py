@@ -8,7 +8,7 @@ import subprocess
 
 def main(repos_path = "data/external/repositories"):
     
-    """Transforms all Python 2.x scripts to 3.x."""
+    """Translates all Python 2.x scripts to 3.x."""
     
     # logging
     logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ def main(repos_path = "data/external/repositories"):
     logger.debug("Path to repositories normalized: {}".format(repos_path))
     
     
-    # start 2to3 transformation
+    # start 2to3 translation
     start = time()
     args = ['2to3',
             '-W',
@@ -32,7 +32,7 @@ def main(repos_path = "data/external/repositories"):
     # logging time passed
     end = time()
     time_passed = pd.Timedelta(seconds=end-start).round(freq='s')
-    logger.info("Time needed to 2to3-transform the scripts: {}"
+    logger.info("Time needed to 2to3-translate the scripts: {}"
                 .format(time_passed))
 
 
@@ -47,7 +47,7 @@ if __name__ == '__main__':
     
     # parse arguments
     parser = argparse.ArgumentParser(
-            description = "Transforms all Python 2.x scripts to 3.x.")
+            description = "Translates all Python 2.x scripts to 3.x.")
     parser.add_argument(
             '--repos_path',
             default = "data/external/repositories",

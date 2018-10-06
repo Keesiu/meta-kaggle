@@ -20,10 +20,11 @@ def main(repos_path = "data/external/repositories",
     logger = logging.getLogger(__name__)
     
     # normalize path
-    repos_path = os.path.normpath(repos_path)
-    logger.debug("Path to repositories normalized: {}".format(repos_path))
+    repos_path = os.path.normpath(repos_path + '_2to3')
+    logger.debug("Path to 2to3-transformed repositories normalized: {}"
+                 .format(repos_path))
     interim_path = os.path.normpath(interim_path)
-    logger.debug("Path to iterim data normalized: {}".format(interim_path))
+    logger.debug("Path to interim data normalized: {}".format(interim_path))
     
     # traverse and list all files
     start = time()

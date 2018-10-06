@@ -49,8 +49,8 @@ def main(repos_path = "data/external/repositories"):
             if not os.listdir(path):
                 try:
                     os.rmdir(path)
-                    logger.debug(logger.info("Successfully deleted folder: {}"
-                                             .format(path)))
+                    logger.debug("Successfully deleted folder: {}"
+                                .format(path))
                     n_deleted_folders += 1
                     if dirpath == repos_path:
                         n_deleted_repos += 1

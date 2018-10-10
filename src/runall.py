@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import sys, logging, argparse
+import os, sys, logging, argparse
 
 # forces import statement to also search in cwd (should be .../meta-kaggle)
 # see: chrisyeh96.github.io/2017/08/08/
@@ -20,6 +20,16 @@ def main(metadata_path, repos_path, interim_path, processed_path):
     Downloads external data from Teams.csv and cleans it.
     """
     
+    # normalize paths
+    metadata_path = os.path.normpath(metadata_path)
+    logging.debug("Path to metadata normalized: {}".format(metadata_path))
+    repos_path = os.path.normpath(repos_path)
+    logging.debug("Path to repositories normalized: {}".format(repos_path))
+    interim_path = os.path.normpath(interim_path)
+    logging.debug("Path to interim data normalized: {}".format(interim_path))
+    processed_path = os.path.normpath(processed_path)
+    logging.debug("Path to processed data normalized: {}".format(processed_path))
+    
     # downloads Github repos from Team.csv to data/external/repositories
     logging.info("Starting download.py.")
     download.main(metadata_path, repos_path)
@@ -31,34 +41,40 @@ def main(metadata_path, repos_path, interim_path, processed_path):
     logging.info("Finished reduce.py.")
     
     # translates the external Python scripts from version 2.x to 3.x
-    logging.info("Starting 2to3.py.")
-    translate2to3.main(repos_path)
-    logging.info("Finished 2to3.py.")
+    if not os.listdir(repos_path) == os.listdir(repos_path + '_2to3'):
+        logging.info("Starting translate2to3.py.")
+        translate2to3.main(repos_path)
+        logging.info("Finished translate2to3.py.")
     
     # tables the 2to3-translated scripts to tabled_df
-    logging.info("Starting table.py.")
-    table.main(repos_path, interim_path)
-    logging.info("Finished table.py.")
+    if not os.path.isfile(os.path.join(interim_path, 'tabled_df.pkl')):
+        logging.info("Starting table.py.")
+        table.main(repos_path, interim_path)
+        logging.info("Finished table.py.")
     
     # extracts source code metrics from script content to extracted_df
-    logging.info("Starting extract.py.")
-    extract.main(interim_path)
-    logging.info("Finished extract.py.")
+    if not os.path.isfile(os.path.join(interim_path, 'extracted_df.pkl')):
+        logging.info("Starting extract.py.")
+        extract.main(interim_path)
+        logging.info("Finished extract.py.")
     
     # aggregates extracted features to repo level and saves to aggregated_df
-    logging.info("Starting aggregate.py.")
-    aggregate.main(metadata_path, interim_path)
-    logging.info("Finished aggregate.py.")
+    if not os.path.isfile(os.path.join(interim_path, 'aggregated_df.pkl')):
+        logging.info("Starting aggregate.py.")
+        aggregate.main(metadata_path, interim_path)
+        logging.info("Finished aggregate.py.")
     
     # cleans aggregated features to become meaningful and saves to cleaned_df
-    logging.info("Starting clean.py.")
-    clean.main(interim_path, processed_path)
-    logging.info("Finished clean.py.")
+    if not os.path.isfile(os.path.join(processed_path, 'cleaned_df.pkl')):
+        logging.info("Starting clean.py.")
+        clean.main(interim_path, processed_path)
+        logging.info("Finished clean.py.")
     
     # selects relevant cleaned features for modeling and saves to selected_df
-    logging.info("Starting select.py.")
-    select.main(processed_path)
-    logging.info("Finished select.py.")
+    if not os.path.isfile(os.path.join(processed_path, 'selected_df.pkl')):
+        logging.info("Starting select.py.")
+        select.main(processed_path)
+        logging.info("Finished select.py.")
 
 
 if __name__ == '__main__':

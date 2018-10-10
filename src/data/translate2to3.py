@@ -26,8 +26,8 @@ def main(repos_path = "data/external/repositories"):
             '--output-dir='+repos_path+'_2to3',
             repos_path]
     s = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    logger.info("Standard output:\n" + s.stdout.decode('latin'))
-    logger.info("Standard error:\n" + s.stderr.decode('latin'))
+    logger.debug("Standard output:\n" + s.stdout.decode('latin'))
+    logger.debug("Standard error:\n" + s.stderr.decode('latin'))
     
     # logging time passed
     end = time()

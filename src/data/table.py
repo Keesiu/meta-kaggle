@@ -21,7 +21,7 @@ def main(repos_path = "data/external/repositories",
     
     # normalize path
     repos_path = os.path.normpath(repos_path + '_2to3')
-    logger.debug("Path to 2to3-transformed repositories normalized: {}"
+    logger.debug("Path to 2to3-translated repositories normalized: {}"
                  .format(repos_path))
     interim_path = os.path.normpath(interim_path)
     logger.debug("Path to interim data normalized: {}".format(interim_path))

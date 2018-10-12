@@ -2,6 +2,8 @@
 
 import matplotlib.pyplot as plt
 import seaborn as sns
+from scipy.stats import pearsonr
+from sklearn.feature_selection import f_regression, SelectKBest
 
 sns.set_context('paper')
 
@@ -32,3 +34,32 @@ corr_heatmap_fig.savefig('corr_heatmap_after_vif.png', dpi=100)
 
 # plot regression model
 sns.regplot(x='radon_avg_cc', y=y.score, data=X, logistic=True)
+
+#%% exploratory analysis
+
+# correlation coefficient matrix
+corr = X.corr()
+
+# compute Pearson correlation coefficient and p-value for each pair
+# (not reliable for small datasets)
+corr_score = pd.DataFrame(
+        data = [list(pearsonr(X[x], y.score)) for x in X],
+        index = X.columns,
+        columns = ['corr_coeff', 'p_value'])
+corr_ranking_log = pd.DataFrame(
+        data = [list(pearsonr(X[x], y.ranking_log)) for x in X],
+        index = X.columns,
+        columns = ['corr_coeff', 'p_value'])
+
+# compute f_scores
+f_score, pval = f_regression(X, y.score)    
+f_score_df = pd.DataFrame(
+        data = {'f_score' : f_score,
+                'pval' : pval},
+        index = X.columns)
+f_score, pval = f_regression(X, y.ranking_log)
+f_ranking_log_df = pd.DataFrame(
+        data = {'f_score' : f_score,
+                'pval' : pval},
+        index = X.columns)
+del f_score, pval

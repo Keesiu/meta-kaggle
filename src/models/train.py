@@ -4,8 +4,10 @@ import os, logging, argparse
 import pandas as pd
 import numpy as np
 from time import time
+from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
+from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
 from statsmodels.formula.api import ols
@@ -35,13 +37,38 @@ def main(processed_path = "data/processed",
     # split df into dependent and independent variables
     y, X = np.split(selected_df, [2], axis=1)
     
+    #%% PCA
+    
+    # normalize
+    for col in ['radon_cc_mean', 'radon_mi_mean', 'loc_max']:
+        print(col, min(X[col]), max(X[col]))
+        X[col] -= min(X[col])
+        X[col] /= max(X[col])
+    
+    # standardize
+    scaler = StandardScaler()
+    X = scaler.fit_transform(X)
+    
+    temp = pd.DataFrame(X).describe()
+    
+    pca = PCA(n_components=10)
+    X = pca.fit_transform(X)
+    pca.components_
+    pca.explained_variance_
+    pca.explained_variance_ratio_
+    
+    pca = PCA().fit(X)
+    plt.plot(np.cumsum(pca.explained_variance_ratio_))
+    # plt.axis([0, 80, 0, 1])
+    plt.xlabel('number of components')
+    plt.ylabel('cumulative explained variance')
+    
     #%% start training
     start = time()
     
 #    # train-test-split
 #    X_train, X_test, y_train, y_test  = train_test_split(
 #            X, y, test_size=0.3, random_state=42)
-    
     
 #    # Linear regression with sklearn
 #    lr = LinearRegression()
@@ -54,10 +81,21 @@ def main(processed_path = "data/processed",
     
     # Linear regression with statsmodels
     mod = sm.OLS(y.ranking_log, sm.add_constant(X))
-    res = mod.fit_regularized(method='elastic_net', L1_wt=1)
+    res = mod.fit()
+    print(res.summary())
+    
+    # Elastic net linear regression with statsmodels
+    mod = sm.OLS(y.ranking_log, sm.add_constant(X))
+    res = mod.fit_regularized(method='elastic_net', alpha=0.1, L1_wt=1.0, refit=True)
+    params = res.params
     print(res.summary())
     
     # logistic regression with statsmodels
+    mod = sm.Logit(y.score, sm.add_constant(X))
+    res = mod.fit()
+    print(res.summary())
+    
+    # lasso logistic regression with statsmodels
     mod = sm.Logit(y.score, sm.add_constant(X))
     res = mod.fit_regularized(method='l1', alpha=.62)
     print(res.summary())

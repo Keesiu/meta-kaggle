@@ -4,17 +4,16 @@ import os, logging, argparse
 import pandas as pd
 import numpy as np
 from time import time
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split
-from sklearn.decomposition import PCA
-import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression, LassoCV, Lasso
+from sklearn.model_selection import train_test_split, cross_val_score, cross_validate
 import statsmodels.api as sm
 from statsmodels.formula.api import ols
+import matplotlib.pyplot as plt
 
 
 def main(processed_path = "data/processed",
-         models_path = "models"):
+         models_path = "models",
+         df_name = 'cleaned'):
     
     """Trains the model."""
     
@@ -29,42 +28,20 @@ def main(processed_path = "data/processed",
     logger.debug("Path to models normalized: {}"
                  .format(models_path))
     
-    # load selected_df
-    selected_df = pd.read_pickle(os.path.join(processed_path, 'selected_df.pkl'))
-    logger.info("Loaded selected_df.pkl. Shape of selected_df: {}"
-                .format(selected_df.shape))
+    # load df, either cleaned, cleaned_pca, selected, selected_pca
+    df = pd.read_pickle(os.path.join(processed_path, df_name+'_df.pkl'))
+    logger.info("Loaded {}. Shape of df: {}"
+                .format(df_name+'_df.pkl', df.shape))
     
     # split df into dependent and independent variables
-    y, X = np.split(selected_df, [2], axis=1)
-    
-    #%% PCA
-    
-    # normalize
-    for col in ['radon_cc_mean', 'radon_mi_mean', 'loc_max']:
-        print(col, min(X[col]), max(X[col]))
-        X[col] -= min(X[col])
-        X[col] /= max(X[col])
-    
-    # standardize
-    scaler = StandardScaler()
-    X = scaler.fit_transform(X)
-    
-    temp = pd.DataFrame(X).describe()
-    
-    pca = PCA(n_components=10)
-    X = pca.fit_transform(X)
-    pca.components_
-    pca.explained_variance_
-    pca.explained_variance_ratio_
-    
-    pca = PCA().fit(X)
-    plt.plot(np.cumsum(pca.explained_variance_ratio_))
-    # plt.axis([0, 80, 0, 1])
-    plt.xlabel('number of components')
-    plt.ylabel('cumulative explained variance')
+    y, X = np.split(df, [2], axis=1)
+    X_columns = X.columns
+    X_index = X.index
+    y_s = y.score
+    y_r = y.ranking_log
     
     #%% start training
-    start = time()
+    
     
 #    # train-test-split
 #    X_train, X_test, y_train, y_test  = train_test_split(
@@ -79,31 +56,107 @@ def main(processed_path = "data/processed",
 #    plt.plot(X, lr.predict(X))
 #    plt.show()
     
-    # Linear regression with statsmodels
-    mod = sm.OLS(y.ranking_log, sm.add_constant(X))
-    res = mod.fit()
-    print(res.summary())
+#    # Linear regression with statsmodels
+#    mod = sm.OLS(y.ranking_log, sm.add_constant(X))
+#    res = mod.fit()
+#    print(res.summary())
     
-    # Elastic net linear regression with statsmodels
-    mod = sm.OLS(y.ranking_log, sm.add_constant(X))
-    res = mod.fit_regularized(method='elastic_net', alpha=0.1, L1_wt=1.0, refit=True)
-    params = res.params
-    print(res.summary())
+#    # logistic regression with statsmodels
+#    mod = sm.Logit(y.score, sm.add_constant(X))
+#    res = mod.fit()
+#    print(res.summary())
     
-    # logistic regression with statsmodels
-    mod = sm.Logit(y.score, sm.add_constant(X))
-    res = mod.fit()
-    print(res.summary())
+#    # lasso logistic regression with statsmodels
+#    mod = sm.Logit(y.score, sm.add_constant(X))
+#    res = mod.fit_regularized(method='l1', alpha=.62)
+#    print(res.summary())
     
-    # lasso logistic regression with statsmodels
-    mod = sm.Logit(y.score, sm.add_constant(X))
-    res = mod.fit_regularized(method='l1', alpha=.62)
-    print(res.summary())
+#    # LR with statsmodels in R-style
+#    model = ols("Ranking ~ radon_sum_cc_ratio + pylint_class_ratio", selected_df)
+#    results = model.fit()
+#    results.summary()
     
-    # LR with statsmodels in R-style
-    model = ols("Ranking ~ radon_sum_cc_ratio + pylint_class_ratio", selected_df)
-    results = model.fit()
-    results.summary()
+    #%% Nested 10-fold cross-validation for linear regression of ranking_log
+    #   with lasso regularization (inner CV for alpha tuning, outer for R^2 robustness)
+    
+    start = time()
+    
+    # print R^2 values for bounding alphas 0 and 1 to make sense of alphas
+    logger.info("R^2 for alpha = 0: {}"
+                .format(Lasso(alpha=0, random_state=42)
+                        .fit(X.values, y_r.values)
+                        .score(X.values, y_r.values)))
+    logger.info("R^2 for alpha = 1: {}"
+                .format(Lasso(alpha=1, random_state=42)
+                        .fit(X.values, y_r.values)
+                        .score(X.values, y_r.values)))
+    
+    # define list of 100 alphas to test: from 1 logarithmically decreasing to 0
+    BASE = 1 + 1/5
+    logger.debug("Constant BASE is set to {}.".format(BASE))
+    alphas = [BASE**(-x) for x in range(100)]
+    
+    # define hyperparameter
+    CV = 20
+    RS = 42
+    N_JOBS = -1
+    SELECTION = 'random'
+    
+    # train LassoCV
+    t1 = time()
+    lasso = LassoCV(cv=CV, alphas=alphas,
+                    random_state=RS, selection=SELECTION, n_jobs= N_JOBS) \
+            .fit(X.values, y_r.values)
+    t2 = time()
+    print("Time to perform cross-validation: {}"
+          .format(pd.Timedelta(seconds=t2-t1).round(freq='s')))
+    
+    # log some statistics
+    logger.info("Lasso score = {}.".format(lasso.score(X.values, y_r.values)))
+    lasso_alpha = lasso.alpha_
+    logger.info("Lasso alpha = {}.".format(lasso_alpha))
+    lasso_coef = pd.Series(data=lasso.coef_, index=X_columns)
+    logger.info("Lasso coefficients = {}.".format(lasso_coef))
+    lasso_mse_path = pd.DataFrame(data=lasso.mse_path_, index=alphas)
+    logger.info("Lasso MSE = {}.".format(lasso_mse_path))
+    
+    # plot all folds with all
+    
+    
+    m_log_alphas = -np.log(lasso.alphas_)/np.log(BASE)
+    # Display results
+    plt.figure(figsize=(10,8))
+    ymin, ymax = 0, 1000
+    plt.plot(m_log_alphas, lasso.mse_path_, ':')
+    plt.plot(m_log_alphas, lasso.mse_path_.mean(axis=-1), 'k',
+             label='Average across the folds', linewidth=2)
+    plt.axvline(-np.log10(lasso.alpha_), linestyle='--', color='k',
+                label='alpha: CV estimate')
+    
+    plt.legend()
+    
+    plt.xlabel('-log(alpha)')
+    plt.ylabel('Mean square error')
+    plt.title('Mean square error on each fold')
+    plt.axis('tight')
+    plt.ylim(ymin, ymax)
+    plt.show()
+    
+    # Nested Cross-Validation
+    lasso = LassoCV(cv=CV, alphas=alphas,
+                    random_state=RS, selection=SELECTION, n_jobs= N_JOBS)
+    t1 = time()
+    cv_results = cross_validate(lasso, X.values, y_r.values,
+                                return_train_score=True, cv=10, n_jobs=N_JOBS)
+    t2 = time()
+    print("Time to perform nested cross-validation: {}"
+          .format(pd.Timedelta(seconds=t2-t1).round(freq='s')))
+    print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+    
+    # Linear regression with lasso regularization
+    mod = sm.OLS(y_r, sm.add_constant(X))
+    res = mod.fit_regularized(method='elastic_net', alpha=lasso_alpha, L1_wt=1.0, refit=True)
+    print(res.summary())
     
 #%%
 if __name__ == '__main__':

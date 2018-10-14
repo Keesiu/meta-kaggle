@@ -10,9 +10,9 @@ if '' not in sys.path:
 
 from src.data import download, reduce, translate2to3, table
 from src.features import extract, aggregate, clean, select, pca
+from src.models import train
 
-
-def main(metadata_path, repos_path, interim_path, processed_path):
+def main(metadata_path, repos_path, interim_path, processed_path, models_path):
     
     """Runs everything, and skips steps already done."""
     
@@ -82,7 +82,15 @@ def main(metadata_path, repos_path, interim_path, processed_path):
             logging.info("Starting pca.py for "+df_name+"_df.pkl.")
             pca.main(processed_path, df_name)
             logging.info("Finished pca.py, created "+df_name+"pca_df.pkl.")
-
+    
+    # trains the elastic net regression on all possible combinations
+    for df_name in ['cleaned', 'selected', 'cleaned_pca', 'selected_pca']:
+        for y_name in ['ranking_log', 'score_neg_log']:
+            if not os.path.isfile(os.path.join(
+                    models_path,
+                    df_name + '_' + y_name
+                    + '_sm_OLS_fit_regularized_summary.txt')):
+                train.main(processed_path, models_path, df_name, y_name)
 
 if __name__ == '__main__':
     
@@ -116,10 +124,16 @@ if __name__ == '__main__':
             default = "data/processed",
             help = "path to processed data: cleaned_df, selected_df \
                     (default: data/processed)")
+    parser.add_argument(
+            '--models_path',
+            default = "models",
+            help = "path to the trained models \
+                    (default: models)")
     args = parser.parse_args()
     
     # run main
     main(args.metadata_path,
          args.repos_path,
          args.interim_path,
-         args.processed_path)
+         args.processed_path,
+         args.models_path)

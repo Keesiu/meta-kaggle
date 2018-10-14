@@ -154,7 +154,7 @@ def main(interim_path = "data/interim",
     logger.info("Dropped all rows with error rates = 1. Shape: {}"
                 .format(cleaned_df.shape))
     
-    # delete rows of error rates
+    # drop columns of error rates
     cleaned_df.drop(columns=[('radon_raw_is_error', 'mean'),
                      ('radon_cc_is_error', 'mean'),
                      ('radon_h_is_error', 'mean'),
@@ -173,15 +173,15 @@ def main(interim_path = "data/interim",
     
     # concatenate cleaned_df with Score and log-transfomated Ranking
     cleaned_df = pd.concat(
-            [pd.to_numeric(teams_df.Score).rename('score'),
+            [(-np.log(pd.to_numeric(teams_df.Score))).rename('score_neg_log'),
              np.log(pd.to_numeric(teams_df.Ranking)).rename('ranking_log'),
              cleaned_df], join='inner', axis=1)
-    logger.info("Concatenated 'score' and log-transformed 'ranking_log'. Shape: {}"
+    logger.info("Concatenated neg-log-transformed 'score_neg_log' and log-transformed 'ranking_log'. Shape: {}"
                 .format(cleaned_df.shape))
     
-    # drop repos with outlying scores
-    cleaned_df = cleaned_df[cleaned_df.score <= 1]
-    logger.info("Dropped rows with scores > 1. Shape: {}"
+    # drop repos with outlying scores (negative now, that is originally > 1)
+    cleaned_df = cleaned_df[cleaned_df.score_neg_log > 0]
+    logger.info("Dropped rows with score_neg_log <= 0 <=> score > 1. Shape: {}"
                 .format(cleaned_df.shape))
     
     # drop repos with outlying length

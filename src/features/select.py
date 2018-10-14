@@ -75,9 +75,9 @@ def main(processed_path = "data/processed"):
         else:
             drop = vif.idxmax()
             if drop not in pylint_rest:
-                logger.warning("Dropped {} (VIF = {}).".format(drop, vif[drop]))
-            else:
                 logger.info("Dropped {} (VIF = {}).".format(drop, vif[drop]))
+            else:
+                logger.debug("Dropped {} (VIF = {}).".format(drop, vif[drop]))
             return drop_max_vif(X.drop(columns=drop), logger, steps-1)
     
     # remove multi-collinearity through VIF

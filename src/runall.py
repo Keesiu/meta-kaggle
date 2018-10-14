@@ -9,16 +9,12 @@ if '' not in sys.path:
     sys.path.insert(0, '')
 
 from src.data import download, reduce, translate2to3, table
-from src.features import extract, aggregate, clean
-from src.models import select
+from src.features import extract, aggregate, clean, select, pca
 
 
 def main(metadata_path, repos_path, interim_path, processed_path):
     
-    """Runs everything.
-    
-    Downloads external data from Teams.csv and cleans it.
-    """
+    """Runs everything, and skips steps already done."""
     
     # normalize paths
     metadata_path = os.path.normpath(metadata_path)
@@ -31,14 +27,16 @@ def main(metadata_path, repos_path, interim_path, processed_path):
     logging.debug("Path to processed data normalized: {}".format(processed_path))
     
     # downloads Github repos from Team.csv to data/external/repositories
-    logging.info("Starting download.py.")
-    download.main(metadata_path, repos_path)
-    logging.info("Finished download.py.")
+    if not os.path.exists(repos_path + '_2to3'):
+        logging.info("Starting download.py.")
+        download.main(metadata_path, repos_path)
+        logging.info("Finished download.py.")
     
     # reduces Github repositories data by deleting every non-Python file
-    logging.info("Starting reduce.py.")
-    reduce.main(repos_path)
-    logging.info("Finished reduce.py.")
+    if not os.path.exists(repos_path + '_2to3'):
+        logging.info("Starting reduce.py.")
+        reduce.main(repos_path)
+        logging.info("Finished reduce.py.")
     
     # translates the external Python scripts from version 2.x to 3.x
     if not os.listdir(repos_path) == os.listdir(repos_path + '_2to3'):
@@ -75,6 +73,15 @@ def main(metadata_path, repos_path, interim_path, processed_path):
         logging.info("Starting select.py.")
         select.main(processed_path)
         logging.info("Finished select.py.")
+    
+    # tranforms cleaned_df and selected_df with PCA
+    # and saves to cleaned_pca_df and selected_pca_df
+    # additionally, saves the respective PCA components
+    for df_name in ['cleaned', 'selected']:
+        if not os.path.isfile(os.path.join(processed_path, df_name+'_pca_df.pkl')):
+            logging.info("Starting pca.py for "+df_name+"_df.pkl.")
+            pca.main(processed_path, df_name)
+            logging.info("Finished pca.py, created "+df_name+"pca_df.pkl.")
 
 
 if __name__ == '__main__':

@@ -4,11 +4,9 @@ import os, logging, argparse
 import pandas as pd
 import numpy as np
 from time import time
-from sklearn.linear_model import LinearRegression, LassoCV, Lasso, ElasticNetCV, ElasticNet
-from sklearn.model_selection import train_test_split, cross_val_score, cross_validate
+from sklearn.linear_model import ElasticNet, ElasticNetCV
+from sklearn.model_selection import cross_validate
 import statsmodels.api as sm
-from statsmodels.formula.api import ols
-import matplotlib.pyplot as plt
 import pickle
 
 
@@ -46,62 +44,24 @@ def main(processed_path = "data/processed",
     y = y[y_name].values
     logger.info("Set y to '{}'.".format(y_name))
     
-    #%% other stuff
-    
-#    # train-test-split
-#    X_train, X_test, y_train, y_test  = train_test_split(
-#            X, y, test_size=0.3, random_state=42)
-    
-#    # Linear regression with sklearn
-#    lr = LinearRegression()
-#    lr.fit(X_train, y_train)
-#    lr.score(X_test, y_test)
-#    lr.get_params()
-#    lr.coef_
-#    plt.plot(X, lr.predict(X))
-#    plt.show()
-    
-#    # Linear regression with statsmodels
-#    mod = sm.OLS(y.ranking_log, sm.add_constant(X))
-#    res = mod.fit()
-#    print(res.summary())
-    
-#    # logistic regression with statsmodels
-#    mod = sm.Logit(y.score, sm.add_constant(X))
-#    res = mod.fit()
-#    print(res.summary())
-    
-#    # lasso logistic regression with statsmodels
-#    mod = sm.Logit(y.score, sm.add_constant(X))
-#    res = mod.fit_regularized(method='l1', alpha=.62)
-#    print(res.summary())
-    
-#    # LR with statsmodels in R-style
-#    model = ols("Ranking ~ radon_sum_cc_ratio + pylint_class_ratio", selected_df)
-#    results = model.fit()
-#    results.summary()
-    
     #%% Nested 10-fold cross-validation for linear regression of ranking_log
     #   with lasso regularization (inner CV for alpha tuning, outer for R^2 robustness)
     
     start = time()
     
-    #%% define hyperparameter
-    
+    # define hyperparameter
 #    # define list of 100 alphas to test: from 1 logarithmically decreasing to 0
 #    BASE = 1 + 1/5
 #    logger.debug("Constant BASE is set to {}.".format(BASE))
 #    ALPHAS = [BASE**(-x) for x in range(100)]
     ALPHAS = [.00001, .0001, .001, .01, .1, .25, .5, .75, .95, .99999]
     logger.debug("Alphas set to {}".format(ALPHAS))
-    
     # define list of l1-ratios to test
     # Note that a good choice of list of values for l1_ratio is often to put
     # more values close to 1 (i.e. Lasso) and less close to 0 (i.e. Ridge),
     # as in [.1, .5, .7, .9, .95, .99, 1]
     L1_RATIOS = [1-a for a in ALPHAS]
     logger.debug("L1_ratios set to {}".format(L1_RATIOS))
-    
     # define other hyperparameter
     CV = 10
     RS = 42
@@ -114,7 +74,7 @@ def main(processed_path = "data/processed",
     logger.debug("CV={}, RS={}, N_JOBS={}, SELECTION={}, NORMALIZE={}"
                  .format(CV, RS, N_JOBS, SELECTION, NORMALIZE))
     
-    #%% print R^2 values for bounding alphas 0 and 1 to make sense of alphas
+    # print R^2 values for bounding alphas 0 and 1 to make sense of alphas
     logger.info("R^2 for alpha=0: {}"
                 .format(ElasticNet(alpha=0, l1_ratio=.5, normalize=NORMALIZE, random_state=42)
                         .fit(X, y)
@@ -124,7 +84,7 @@ def main(processed_path = "data/processed",
                         .fit(X, y)
                         .score(X, y)))
     
-    #%% train model
+    # train model
     mod = ElasticNetCV(cv=CV, alphas=ALPHAS, l1_ratio=L1_RATIOS, normalize=NORMALIZE,
                        random_state=RS, selection=SELECTION, n_jobs= N_JOBS) \
           .fit(X, y)
@@ -138,26 +98,7 @@ def main(processed_path = "data/processed",
     coef = pd.Series(data=mod.coef_, index=X_columns)
     logger.debug("best coefficients:\n{}".format(coef))
     
-#    mse_path = pd.DataFrame(data=mod.mse_path_, index=ALPHAS)
-#    logger.info("Lasso MSE = {}.".format(mse_path))
-#    # Display results
-#    m_log_alphas = -np.log(mod.alphas_)/np.log(BASE)
-#    plt.figure(figsize=(10,8))
-#    ymin, ymax = 0, 1000
-#    plt.plot(m_log_alphas, mod.mse_path_, ':')
-#    plt.plot(m_log_alphas, mod.mse_path_.mean(axis=-1), 'k',
-#             label='Average across the folds', linewidth=2)
-#    plt.axvline(-np.log10(mod.alpha_), linestyle='--', color='k',
-#                label='alpha: CV estimate')
-#    plt.legend()
-#    plt.xlabel('-log(alpha)')
-#    plt.ylabel('Mean square error')
-#    plt.title('Mean square error on each fold')
-#    plt.axis('tight')
-#    plt.ylim(ymin, ymax)
-#    plt.show()
-    
-    # Nested Cross-Validation
+    # Nested Cross-Validation to test robustness of R^2
     cv_results = cross_validate(ElasticNetCV(cv=CV,
                                              alphas=ALPHAS,
                                              normalize=NORMALIZE,
@@ -172,7 +113,7 @@ def main(processed_path = "data/processed",
     logger.debug("Nested cross-validation results:\n{}"
                 .format(pd.DataFrame(data=cv_results)))
     
-    # Elastic Net regression with statsmodels
+    # Elastic Net regression with statsmodels for summary
     mod2 = sm.OLS(y, sm.add_constant(pd.DataFrame(data=X,
                                                   columns=X_columns,
                                                   index=X_index)))\

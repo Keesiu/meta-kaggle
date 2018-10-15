@@ -63,3 +63,24 @@ f_ranking_log_df = pd.DataFrame(
                 'pval' : pval},
         index = X.columns)
 del f_score, pval
+
+#%% plot ElasticNetCV results
+
+    mse_path = pd.DataFrame(data=mod.mse_path_, index=ALPHAS)
+    logger.info("Lasso MSE = {}.".format(mse_path))
+    # Display results
+    m_log_alphas = -np.log(mod.alphas_)/np.log(BASE)
+    plt.figure(figsize=(10,8))
+    ymin, ymax = 0, 1000
+    plt.plot(m_log_alphas, mod.mse_path_, ':')
+    plt.plot(m_log_alphas, mod.mse_path_.mean(axis=-1), 'k',
+             label='Average across the folds', linewidth=2)
+    plt.axvline(-np.log10(mod.alpha_), linestyle='--', color='k',
+                label='alpha: CV estimate')
+    plt.legend()
+    plt.xlabel('-log(alpha)')
+    plt.ylabel('Mean square error')
+    plt.title('Mean square error on each fold')
+    plt.axis('tight')
+    plt.ylim(ymin, ymax)
+    plt.show()

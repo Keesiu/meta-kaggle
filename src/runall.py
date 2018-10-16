@@ -84,8 +84,8 @@ def main(metadata_path, repos_path, interim_path, processed_path, models_path):
             logging.info("Finished pca.py, created "+df_name+"pca_df.pkl.")
     
     # trains the elastic net regression on all possible combinations
-    for df_name in ['cleaned', 'selected', 'cleaned_pca', 'selected_pca']:
-        for y_name in ['ranking_log', 'score_neg_log']:
+    for y_name in ['ranking_log', 'score_neg_log']:
+        for df_name in ['cleaned', 'selected', 'cleaned_pca', 'selected_pca']:
             if not os.path.isfile(os.path.join(
                     models_path,
                     df_name + '_' + y_name

@@ -54,60 +54,84 @@ def main(processed_path = "data/processed",
 #    BASE = 1 + 1/5
 #    logger.debug("Constant BASE is set to {}.".format(BASE))
 #    ALPHAS = [BASE**(-x) for x in range(100)]
-    ALPHAS = [.00001, .0001, .001, .01, .1, .25, .5, .75, .95, .99999]
-    logger.debug("Alphas set to {}".format(ALPHAS))
-    # define list of l1-ratios to test
-    # Note that a good choice of list of values for l1_ratio is often to put
-    # more values close to 1 (i.e. Lasso) and less close to 0 (i.e. Ridge),
-    # as in [.1, .5, .7, .9, .95, .99, 1]
-    L1_RATIOS = [1-a for a in ALPHAS]
-    logger.debug("L1_ratios set to {}".format(L1_RATIOS))
-    # define other hyperparameter
-    CV = 10
-    RS = 42
-    N_JOBS = -1
-    SELECTION = 'random'
+#    ALPHAS = np.logspace(0.00001, 1, num=50, base=10.0)
+#    n_samples = len(y)
+#    alpha_max = (np.sqrt(np.sum(Xy ** 2, axis=1)).max() /
+#                 (n_samples * l1_ratio))
+#    np.logspace(np.log10(alpha_max * eps), np.log10(alpha_max),
+#                       num=n_alphas)[::-1]
+#    logger.debug("Alphas set to {}".format(ALPHAS))
+    L1_RATIOS = [1.0, .95, .7, .5, .3, .1]
+    EPS = 0.001
+    N_ALPHAS = 100
+    ALPHAS = None
     # normalize data only if PCA was not performed (because PCA standardized)
     # If True, the regressors X will be normalized before regression
     # by subtracting the mean and dividing by the l2-norm.
     NORMALIZE = not PCA
-    logger.debug("CV={}, RS={}, N_JOBS={}, SELECTION={}, NORMALIZE={}"
-                 .format(CV, RS, N_JOBS, SELECTION, NORMALIZE))
+    MAX_ITER = 1000
+    TOL = 0.0001
+    CV = 10
+    N_JOBS = -1
+    RS = 1
+    SELECTION = 'cyclic'
+    
+    logger.info("l1_ratio={}, eps={}, n_alphas={}, alphas={}, normalize={}, max_iter={}, tol={}, cv={}, n_jobs={}, random_state={}, selection={}"
+                 .format(L1_RATIOS, EPS, N_ALPHAS, ALPHAS, NORMALIZE,
+                         MAX_ITER, TOL, CV, N_JOBS, RS, SELECTION))
+    logger.debug("Try following L1-ratios: {}".format(L1_RATIOS))
     
     # print R^2 values for bounding alphas 0 and 1 to make sense of alphas
-    logger.info("R^2 for alpha=0: {}"
-                .format(ElasticNet(alpha=0, l1_ratio=.5, normalize=NORMALIZE, random_state=42)
+    logger.info("Bounding score: R^2 for alpha=0 and l1_ratio=0.5: {}"
+                .format(ElasticNet(alpha=0, l1_ratio=.5,
+                                   normalize=NORMALIZE, random_state=42)
                         .fit(X, y)
                         .score(X, y)))
-    logger.info("R^2 for alpha=1: {}"
-                .format(ElasticNet(alpha=1, l1_ratio=.5, normalize=NORMALIZE, random_state=42)
+    logger.info("Bounding score: R^2 for alpha=1 and l1_ratio=0.5: {}"
+                .format(ElasticNet(alpha=1, l1_ratio=.5,
+                                   normalize=NORMALIZE, random_state=42)
                         .fit(X, y)
                         .score(X, y)))
     
     # train model
-    mod = ElasticNetCV(cv=CV, alphas=ALPHAS, l1_ratio=L1_RATIOS, normalize=NORMALIZE,
-                       random_state=RS, selection=SELECTION, n_jobs= N_JOBS) \
+    mod = ElasticNetCV(l1_ratio = L1_RATIOS,
+                       eps = EPS,
+                       n_alphas = N_ALPHAS,
+                       alphas = ALPHAS,
+                       normalize = NORMALIZE,
+                       max_iter = MAX_ITER,
+                       tol = TOL,
+                       cv = CV,
+                       n_jobs = N_JOBS,
+                       random_state = RS,
+                       selection = SELECTION)\
           .fit(X, y)
     
     # log some statistics
     logger.info("best R^2 score: {}".format(mod.score(X, y)))
-    l1_ratio = mod.l1_ratio_
-    logger.info("best l1_ratio: {}".format(l1_ratio))
-    alpha = mod.alpha_
-    logger.info("best alpha: {}".format(alpha))
+    best_l1_ratio = mod.l1_ratio_
+    logger.info("best l1_ratio: {}".format(best_l1_ratio))
+    best_alpha = mod.alpha_
+    logger.info("best alpha: {}".format(best_alpha))
+    logger.debug("tested alphas:\n{}".format(mod.alphas_))
     coef = pd.Series(data=mod.coef_, index=X_columns)
     logger.debug("best coefficients:\n{}".format(coef))
     
     # Nested Cross-Validation to test robustness of R^2
-    cv_results = cross_validate(ElasticNetCV(cv=CV,
-                                             alphas=ALPHAS,
-                                             normalize=NORMALIZE,
-                                             random_state=RS,
-                                             selection=SELECTION,
-                                             n_jobs= N_JOBS),
-                                X, y, cv=10,
+    cv_results = cross_validate(ElasticNetCV(l1_ratio = L1_RATIOS,
+                                             eps = EPS,
+                                             n_alphas = N_ALPHAS,
+                                             alphas = ALPHAS,
+                                             normalize = NORMALIZE,
+                                             max_iter = MAX_ITER,
+                                             tol = TOL,
+                                             cv = CV,
+                                             n_jobs = N_JOBS,
+                                             random_state = RS,
+                                             selection = SELECTION),
+                                X, y, cv=CV,
                                 return_train_score=True, n_jobs=N_JOBS)
-    logger.info("95% confidence intervall: {:05.2f} +/-{:05.2f} (mean +/- 2 std)"
+    logger.info("95% confidence intervall: {:.2f} +/- {:.2f} (mean +/- 2*std)"
                 .format(cv_results['test_score'].mean(),
                         cv_results['test_score'].std()*2))
     logger.debug("Nested cross-validation results:\n{}"
@@ -118,12 +142,12 @@ def main(processed_path = "data/processed",
                                                   columns=X_columns,
                                                   index=X_index)))\
           .fit_regularized(method='elastic_net',
-                           alpha=alpha,
-                           L1_wt=l1_ratio,
+                           alpha=best_alpha,
+                           L1_wt=best_l1_ratio,
                            refit=True)
     res = mod2.summary().as_text()
     logger.info("ElasticNet regression (from sm) of '{}' with respect to '{}' with alpha={} and L1_wt={}:\n{}"
-                .format(df_name, y_name, alpha, l1_ratio, res))
+                .format(df_name, y_name, best_alpha, best_l1_ratio, res))
     
     #%% export results as pickle file to models folder
     

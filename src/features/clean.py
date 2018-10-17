@@ -4,6 +4,7 @@ import os, logging, argparse
 import pandas as pd
 import numpy as np
 from time import time
+from sklearn.utils import shuffle
 
 
 def main(interim_path = "data/interim",
@@ -193,6 +194,9 @@ def main(interim_path = "data/interim",
     cleaned_df.dropna(inplace=True)
     logger.info("Dropped all rows with NaNs. Shape: {}"
                 .format(cleaned_df.shape))
+    
+    #%% shuffle the data
+    cleaned_df = shuffle(cleaned_df, random_state=0)
     
     #%% export cleaned_df as pickle file to processed folder
     cleaned_df.to_pickle(os.path.join(processed_path, 'cleaned_df.pkl'))

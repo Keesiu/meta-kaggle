@@ -32,14 +32,13 @@ def main(processed_path = "data/processed",
     df = pd.read_pickle(os.path.join(processed_path, df_name+'_df.pkl'))
     logger.info("Loaded '{}'. Shape of df: {}"
                 .format(df_name+'_df.pkl', df.shape))
-    # wheather PCA was performed
-    PCA = True if df_name[-4:] == '_pca' else False
     
     # split df into dependent and independent variables
     y, X = np.split(df, [2], axis=1)
     X_columns = X.columns
     X_index = X.index
     X = X.values
+    
     # set y to either ranking_log or score_neg_log
     y = y[y_name].values
     logger.info("Set y to '{}'.".format(y_name))
@@ -65,14 +64,15 @@ def main(processed_path = "data/processed",
     EPS = 0.001
     N_ALPHAS = 100
     ALPHAS = None
-    # normalize data only if PCA was not performed (because PCA standardized)
-    # If True, the regressors X will be normalized before regression
-    # by subtracting the mean and dividing by the l2-norm.
-    NORMALIZE = not PCA
+    # normalize data
+    # If True, the regressors X will be normalized before regression by
+    # subtracting the mean (column-wise) and dividing by the l2-norm in
+    # order for each feature to have norm = 1.
+    NORMALIZE = True
     MAX_ITER = 1000
     TOL = 0.0001
     CV = 10
-    N_JOBS = -1
+    N_JOBS = 1
     RS = 1
     SELECTION = 'cyclic'
     

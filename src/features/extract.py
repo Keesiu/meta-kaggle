@@ -7,6 +7,7 @@ from time import time
 import collections
 import radon.raw, radon.complexity, radon.metrics
 import subprocess
+from collections import Counter
 
 #%% define main function which performs whole extraction
 def main(interim_path = "data/interim"):
@@ -26,6 +27,8 @@ def main(interim_path = "data/interim"):
         - Messages by category: # of convention, refactor, warning, error 
           messages by pylint
         - Messages: # of all occurrences by specific message id
+        Manually:
+        - a column 'uses_module_<module>' for each module used
     Every metric type has a flag column <metric type>_is_error indicating
     if an error occurred while trying to extract the respective metrics."""
     
@@ -146,6 +149,42 @@ def main(interim_path = "data/interim"):
     n_pylint_success = n-n_pylint_error
     logger.info("Extracted pylint metrics: {} scripts, {} successes, {} errors."
                 .format(n, n_pylint_success, n_pylint_error))
+    
+    #%% extract used modules
+    
+    # list of modules per repo
+    modules = []
+    for index, repo in tabled_df.iterrows():
+        directs = re.findall(r"^[\s]*import ([a-zA-Z0-9]+)",
+                             repo.content, re.MULTILINE)
+        froms = re.findall(r"from ([a-zA-Z0-9]+)[a-zA-Z0-9.]* import",
+                           repo.content)
+        together = Counter(set(directs) | set(froms))
+        modules.append(together)
+        logger.debug("Script {} uses following modules: {}"
+                     .format(index, list(together.keys())))
+    
+    # total counts
+    total = Counter()
+    for m in modules:
+        total.update(m)
+    logger.info("In total {} different modules are used."
+                .format(len(total)))
+    logger.info("Top 10 packages:\n{}"
+                .format(total.most_common(10)))
+    
+    # create df of one-hot-encoded module features
+    module_names = sorted(list(total.keys()), key=str.lower)
+    dictionary = {}
+    for index in tabled_df.index:
+        dictionary[index] = [modules[index][name] for name in module_names]
+    module_names = ['uses_module_'+x for x in module_names]
+    df = pd.DataFrame.from_dict(dictionary,
+                                orient='index',
+                                columns=module_names)
+    
+    # concatenate to extracted_df
+    extracted_df = pd.concat([extracted_df, df], axis=1)
     
     #%% export extracted_df as pickle file to interim folder
     extracted_df.to_pickle(os.path.join(interim_path, 'extracted_df.pkl'))

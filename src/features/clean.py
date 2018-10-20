@@ -29,7 +29,7 @@ def main(interim_path = "data/interim",
     
     # load aggregated_df
     aggregated_df = pd.read_pickle(os.path.join(interim_path, 'aggregated_df.pkl'))
-    logger.info("Loaded aggregated_df.pkl. Shape of aggregated_df: {}"
+    logger.info("Loaded aggregated_df.pkl. Shape of df: {}"
                 .format(aggregated_df.shape))
     
     #%% start cleaning
@@ -134,6 +134,11 @@ def main(interim_path = "data/interim",
         elif 'pylint' in col[0] or 'radon' in col[0]:
             dependent.append(col)
             logger.debug("Included dependent feature:  {}".format(col))
+        elif 'uses_module_' in col[0]:
+            # set every value > 0 to 1 because you only want indication
+            cleaned_df[col].where(cleaned_df[col]==0, other=1, inplace=True)
+            logger.debug("Skipped independent feature: {}".format(col))
+            continue
         else:
             logger.error("{} not catched during creation of list 'dependent'."
                          .format(col))

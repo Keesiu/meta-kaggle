@@ -74,23 +74,18 @@ def main(metadata_path, repos_path, interim_path, processed_path, models_path):
         select.main(processed_path)
         logging.info("Finished select.py.")
     
-    # tranforms cleaned_df and selected_df with PCA
-    # and saves to cleaned_pca_df and selected_pca_df
+    # tranforms selected_df with PCA and saves to pca_df
     # additionally, saves the respective PCA components
-    for df_name in ['cleaned', 'selected']:
-        if not os.path.isfile(os.path.join(processed_path, df_name+'_pca_df.pkl')):
-            logging.info("Starting pca.py for "+df_name+"_df.pkl.")
-            pca.main(processed_path, df_name)
-            logging.info("Finished pca.py, created "+df_name+"pca_df.pkl.")
+        if not os.path.isfile(os.path.join(processed_path, 'pca_df.pkl')):
+            logging.info("Starting pca.py for selected_df.")
+            pca.main(processed_path)
+            logging.info("Finished pca.py, created pca_df.pkl.")
     
     # trains the elastic net regression on all possible combinations
-    for y_name in ['ranking_log', 'score_neg_log']:
-        for df_name in ['cleaned', 'selected', 'cleaned_pca', 'selected_pca']:
-            if not os.path.isfile(os.path.join(
-                    models_path,
-                    df_name + '_' + y_name
-                    + '_sm_OLS_fit_regularized_summary.txt')):
-                train.main(processed_path, models_path, df_name, y_name)
+    for y_name in ['ranking_log', 'score']:
+        if not os.path.isfile(os.path.join(
+                models_path, y_name + '_sm_OLS_fit_regularized_summary.txt')):
+            train.main(processed_path, models_path, y_name)
 
 if __name__ == '__main__':
     

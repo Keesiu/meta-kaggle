@@ -8,14 +8,30 @@ from sklearn.feature_selection import f_regression, SelectKBest
 sns.set_context('paper')
 
 # score and ranking
-sns.scatterplot(x=y.Score, y=y.Ranking)
+sns.scatterplot(x=X.loc_max_log, y=y.score)
 
 # histogram
-sns.distplot(y.Score)
-sns.distplot(y.Ranking)
-
+sns.distplot(y.score)
+sns.distplot(y.ranking_log)
+sns.distplot(X.loc_max_log)
+sns.distplot(X.pylint_warning_ratio)
+sns.distplot(X.radon_cc_mean)
+sns.distplot(X.radon_h_difficulty_ratio)
+sns.distplot(X.radon_h_effort_ratio)
+sns.distplot(X.radon_mi_mean)
+sns.distplot(X.pylint_)
+sns.distplot(X.loc_max_log)
 # pairplot
-sns.pairplot(pd.concat([y, X], axis=1))
+sns.pairplot(X.drop(columns=['core',
+                             'visualization',
+                             'machine_learning',
+                             'deep_learning'], axis=1))
+
+# boxplot
+sns.boxplot(data=X)
+
+# residual plot
+sns.residplot(X.loc_max_log, y.score, lowess=True)
 
 # correlation coefficient matrix
 corr = X.corr()
@@ -29,8 +45,8 @@ cmap = sns.diverging_palette(240, 10, as_cmap=True)
 # Draw the heatmap with the mask and correct aspect ratio
 corr_heatmap = sns.heatmap(corr, mask=mask, cmap=cmap, vmin=-1, vmax=1, center=0,
             square=True, linewidths=.5, cbar_kws={"shrink": .5})
-corr_heatmap_fig = corr_heatmap.get_figure()    
-corr_heatmap_fig.savefig('corr_heatmap_after_vif.png', dpi=100)
+#corr_heatmap_fig = corr_heatmap.get_figure()    
+#corr_heatmap_fig.savefig('corr_heatmap_after_vif.png', dpi=100)
 
 # plot regression model
 sns.regplot(x='radon_avg_cc', y=y.score, data=X, logistic=True)

@@ -148,6 +148,8 @@ def main(interim_path = "data/interim",
                 .format(len(dependent), cleaned_df.shape))
     # create new column as log-transformed loc_max
     cleaned_df[('loc_max_log', 'max')] = np.log(loc_max)
+    logger.info("Added column 'loc_max_log'. Shape: {}"
+                .format(cleaned_df.shape))
     
     #%% cleaning rows
     

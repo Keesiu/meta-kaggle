@@ -8,8 +8,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 
-def main(processed_path = "data/processed",
-         df_name = 'cleaned'):
+def main(processed_path = "data/processed"):
     
     """Performs PCA on the file '<df_name>_df.pkl'.
     
@@ -28,13 +27,15 @@ def main(processed_path = "data/processed",
     logger.debug("Path to processed data normalized: {}"
                  .format(processed_path))
     
-    # load df, either cleaned_df or selected_df
-    df = pd.read_pickle(os.path.join(processed_path, df_name+'_df.pkl'))
-    logger.info("Loaded {}. Shape of df: {}"
-                .format(df_name+'_df.pkl', df.shape))
+    # load selected_df
+    selected_df = pd.read_pickle(os.path.join(processed_path, 'selected_df.pkl'))
+    logger.info("Loaded selected_df. Shape: {}"
+                .format(selected_df.shape))
     
     #%% split df into dependent and independent variables
-    y, X = np.split(df, [2], axis=1)
+    teams_df = selected_df.iloc[:, :9]
+    y = selected_df.iloc[:, 9:11]
+    X = selected_df.iloc[:, 11:]
     X_columns = X.columns
     X_index = X.index
     start = time()
@@ -80,15 +81,15 @@ def main(processed_path = "data/processed",
     pca_df = pd.concat([y, X], axis=1)
     
     #%% export pca_df as pickle file to processed folder
-    pca_df.to_pickle(os.path.join(processed_path, df_name+'_pca_df.pkl'))
+    pca_df.to_pickle(os.path.join(processed_path, 'pca_df.pkl'))
     logger.info("Saved pca_df to {}."
-            .format(os.path.join(processed_path, df_name+'_pca_df.pkl')))
+            .format(os.path.join(processed_path, 'pca_df.pkl')))
     
     #%% export pca_components_df as pickle file to processed folder
     logger.info("Components:\n{}".format(pca_components_df))
-    pca_components_df.to_pickle(os.path.join(processed_path, df_name+'_pca_components_df.pkl'))
+    pca_components_df.to_pickle(os.path.join(processed_path, 'pca_components_df.pkl'))
     logger.info("Saved pca_components_df to {}."
-            .format(os.path.join(processed_path, df_name+'_pca_components_df.pkl')))
+            .format(os.path.join(processed_path, 'pca_components_df.pkl')))
     
     #%% logging time passed
     end = time()
@@ -115,9 +116,9 @@ if __name__ == '__main__':
                     (default: data/processed)")
     parser.add_argument(
             '--df_name',
-            default = "cleaned",
+            default = "selected",
             help = "df to perform PCA on (either 'cleaned' or 'selected') \
-                    (default: cleaned)")
+                    (default: selected)")
     args = parser.parse_args()
     
     # run main

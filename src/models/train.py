@@ -2,7 +2,6 @@
 
 import os, logging, argparse
 import pandas as pd
-import numpy as np
 from time import time
 from sklearn.linear_model import ElasticNet, ElasticNetCV
 from sklearn.model_selection import cross_validate
@@ -12,7 +11,6 @@ import pickle
 
 def main(processed_path = "data/processed",
          models_path = "models",
-         df_name = 'cleaned',
          y_name = 'ranking_log'):
     
     """Trains the model."""
@@ -29,17 +27,19 @@ def main(processed_path = "data/processed",
                  .format(models_path))
     
     # load df, either cleaned, cleaned_pca, selected, selected_pca
-    df = pd.read_pickle(os.path.join(processed_path, df_name+'_df.pkl'))
-    logger.info("Loaded '{}'. Shape of df: {}"
-                .format(df_name+'_df.pkl', df.shape))
+    selected_df = pd.read_pickle(os.path.join(processed_path, 'selected_df.pkl'))
+    logger.info("Loaded selected_df. Shape of df: {}"
+                .format(selected_df.shape))
     
     # split df into dependent and independent variables
-    y, X = np.split(df, [2], axis=1)
+    teams_df = selected_df.iloc[:, :9]
+    y = selected_df.iloc[:, 9:11]
+    X = selected_df.iloc[:, 11:]
     X_columns = X.columns
     X_index = X.index
     X = X.values
     
-    # set y to either ranking_log or score_neg_log
+    # set y to either ranking_log or score
     y = y[y_name].values
     logger.info("Set y to '{}'.".format(y_name))
     
@@ -138,33 +138,33 @@ def main(processed_path = "data/processed",
                 .format(pd.DataFrame(data=cv_results)))
     
     # Elastic Net regression with statsmodels for summary
-    mod2 = sm.OLS(y, sm.add_constant(pd.DataFrame(data=X,
-                                                  columns=X_columns,
-                                                  index=X_index)))\
+    mod_sm = sm.OLS(y, sm.add_constant(pd.DataFrame(data=X,
+                                                    columns=X_columns,
+                                                    index=X_index)))\
           .fit_regularized(method='elastic_net',
                            alpha=best_alpha,
                            L1_wt=best_l1_ratio,
                            refit=True)
-    res = mod2.summary().as_text()
-    logger.info("ElasticNet regression (from sm) of '{}' with respect to '{}' with alpha={} and L1_wt={}:\n{}"
-                .format(df_name, y_name, best_alpha, best_l1_ratio, res))
+    res = mod_sm.summary().as_text()
+    logger.info("ElasticNet regression (from sm) of selected_df with respect to '{}' with alpha={} and L1_wt={}:\n{}"
+                .format(y_name, best_alpha, best_l1_ratio, res))
     
     #%% export results as pickle file to models folder
     
     # pickle mod
-    with open(os.path.join(models_path, df_name+'_'+y_name+'_sklearn_ElasticNetCV.pkl'), 'wb') as handle:
+    with open(os.path.join(models_path, y_name+'_sklearn_ElasticNetCV.pkl'), 'wb') as handle:
         pickle.dump(mod, handle, protocol=pickle.HIGHEST_PROTOCOL)
     logger.info("Saved elastic net model of sklearn to {}."
-                .format(os.path.join(models_path, df_name+'_'+y_name+'_sklearn_ElasticNetCV.pkl')))
+                .format(os.path.join(models_path, y_name+'_sklearn_ElasticNetCV.pkl')))
     
-    # pickle mod2
-    with open(os.path.join(models_path, df_name+'_'+y_name+'_sm_OLS_fit_regularized.pkl'), 'wb') as handle:
-        pickle.dump(mod2, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    # pickle mod_sm
+    with open(os.path.join(models_path, y_name+'_sm_OLS_fit_regularized.pkl'), 'wb') as handle:
+        pickle.dump(mod_sm, handle, protocol=pickle.HIGHEST_PROTOCOL)
     logger.info("Saved elastic net model of statsmodels to {}."
-                .format(os.path.join(models_path, df_name+'_'+y_name+'_sm_OLS_fit_regularized.pkl')))
+                .format(os.path.join(models_path, y_name+'_sm_OLS_fit_regularized.pkl')))
     
     # save res as .txt
-    f = open(os.path.join(models_path, df_name+'_'+y_name+'_sm_OLS_fit_regularized_summary.txt'), "w+")
+    f = open(os.path.join(models_path, y_name+'_sm_OLS_fit_regularized_summary.txt'), "w+")
     f.write(res)
     f.close()
     
@@ -172,8 +172,8 @@ def main(processed_path = "data/processed",
     #%% logging time passed
     end = time()
     time_passed = pd.Timedelta(seconds=end-start).round(freq='s')
-    logger.info("Time needed to train Elastic Net Model on '{}' with respect to '{}': {}"
-                .format(df_name+'_df.pkl', y_name, time_passed))
+    logger.info("Time needed to train Elastic Net Model on selected_df with respect to '{}': {}"
+                .format(y_name, time_passed))
     
 #%%
 if __name__ == '__main__':
@@ -199,18 +199,12 @@ if __name__ == '__main__':
             help = "path to save the trained models \
                     (default: models)")
     parser.add_argument(
-            '--df_name',
-            default = 'cleaned',
-            help = "name of df to be trained on \
-                    either cleaned, cleaned_pca, selected, selected_pca \
-                    (default: cleaned)")
-    parser.add_argument(
             '--y_name',
             default = 'ranking_log',
             help = "name of dependent variable to be trained on \
-                    either 'ranking_log' or 'score_neg_log' \
+                    either 'ranking_log' or 'score' \
                     (default: ranking_log)")
     args = parser.parse_args()
     
     # run main
-    main(args.processed_path, args.models_path, args.df_name, args.y_name)
+    main(args.processed_path, args.models_path, args.y_name)

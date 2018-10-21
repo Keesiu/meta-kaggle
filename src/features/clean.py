@@ -107,7 +107,7 @@ def main(interim_path = "data/interim",
     
     # transforms features to become ratios of loc to avoid multi-collinearity
     # calculate maximum number for lines of codes, since inconsistent
-    max_loc_df = pd.concat([
+    loc_max = pd.concat([
             cleaned_df[('radon_raw_loc', 'sum')],
             cleaned_df[('radon_raw_lloc', 'sum')],
             cleaned_df[('radon_raw_sloc', 'sum')]
@@ -118,9 +118,7 @@ def main(interim_path = "data/interim",
                     + cleaned_df[('pylint_docstring', 'sum')]
                     + cleaned_df[('pylint_comment', 'sum')]
                     + cleaned_df[('pylint_empty', 'sum')]], axis=1)
-    cleaned_df[('loc_max', 'max')] = max_loc_df.max(axis=1)
-    logger.info("Created 'loc_max'. Shape: {}"
-                .format(cleaned_df.shape))
+    loc_max = loc_max.max(axis=1)
     cleaned_df.drop(columns=[('radon_raw_loc', 'sum'), ('radon_raw_lloc', 'sum')],
             inplace=True)
     logger.info("Dropped 'radon_raw_loc' and 'radon_raw_lloc'. Shape: {}"
@@ -143,11 +141,13 @@ def main(interim_path = "data/interim",
             logger.error("{} not catched during creation of list 'dependent'."
                          .format(col))
     for col in dependent:
-        cleaned_df[(col[0]+'_ratio', 'ratio')] = cleaned_df[col]/cleaned_df[('loc_max', 'max')]
+        cleaned_df[(col[0]+'_ratio', 'ratio')] = cleaned_df[col]/loc_max
         logger.debug("Created new ratio feature for: {}".format(col))
     cleaned_df.drop(columns=dependent, inplace=True)
     logger.info("Transformed {} features to ratios of lines-of-code. Shape: {}"
                 .format(len(dependent), cleaned_df.shape))
+    # create new column as log-transformed loc_max
+    cleaned_df[('loc_max_log', 'max')] = np.log(loc_max)
     
     #%% cleaning rows
     
@@ -179,20 +179,35 @@ def main(interim_path = "data/interim",
     
     # concatenate cleaned_df with Score and log-transfomated Ranking
     cleaned_df = pd.concat(
-            [(-np.log(pd.to_numeric(teams_df.Score))).rename('score_neg_log'),
+            [pd.to_numeric(teams_df.Score).rename('score'),
              np.log(pd.to_numeric(teams_df.Ranking)).rename('ranking_log'),
              cleaned_df], join='inner', axis=1)
-    logger.info("Concatenated neg-log-transformed 'score_neg_log' and log-transformed 'ranking_log'. Shape: {}"
+    logger.info("Concatenated 'score' and log-transformed 'ranking_log'. Shape: {}"
                 .format(cleaned_df.shape))
     
-    # drop repos with outlying scores (negative now, that is originally > 1)
-    cleaned_df = cleaned_df[cleaned_df.score_neg_log > 0]
-    logger.info("Dropped rows with score_neg_log <= 0 <=> score > 1. Shape: {}"
+    # drop repos with outliers
+#    desc = cleaned_df.describe().T
+#    top = (desc['max'] - desc['50%']) / desc['std']
+#    bottom = (desc['50%']-desc['min']) / desc['std']
+#    desc.loc[top>5]
+#    desc.loc[bottom>3]
+    cleaned_df = cleaned_df[cleaned_df.score <= 1] # 16
+    logger.info("Dropped rows with score > 1. Shape: {}"
                 .format(cleaned_df.shape))
-    
-    # drop repos with outlying length
-    cleaned_df = cleaned_df[cleaned_df.loc_max <= 20000]
-    logger.info("Dropped rows with lines of code > 20.000. Shape: {}"
+    cleaned_df = cleaned_df[cleaned_df.loc_max_log <= np.log(10000)] # 4
+    logger.info("Dropped rows with lines of code > 10.000. Shape: {}"
+                .format(cleaned_df.shape))
+    cleaned_df = cleaned_df[cleaned_df.pylint_warning_ratio <= 1] # 3
+    logger.info("Dropped rows with pylint_warning_ratio > 1. Shape: {}"
+                .format(cleaned_df.shape))
+    cleaned_df = cleaned_df[cleaned_df.radon_h_effort_ratio <= 1000] # 4
+    logger.info("Dropped rows with radon_h_effort_ratio > 1000. Shape: {}"
+                .format(cleaned_df.shape))
+    cleaned_df = cleaned_df[cleaned_df.radon_h_difficulty_ratio <= .1] # 1
+    logger.info("Dropped rows with radon_h_difficulty_ratio > 0.1. Shape: {}"
+                .format(cleaned_df.shape))
+    cleaned_df = cleaned_df[cleaned_df.radon_cc_mean <= 7.5] # 4
+    logger.info("Dropped rows with radon_cc_mean > 7.5. Shape: {}"
                 .format(cleaned_df.shape))
     
     # delete rows with NaNs
@@ -200,7 +215,8 @@ def main(interim_path = "data/interim",
     logger.info("Dropped all rows with NaNs. Shape: {}"
                 .format(cleaned_df.shape))
     
-    #%% shuffle the data
+    #%% concat with teams_df shuffle the data
+    cleaned_df = pd.concat([teams_df, cleaned_df], join='inner', axis=1)
     cleaned_df = shuffle(cleaned_df, random_state=0)
     
     #%% export cleaned_df as pickle file to processed folder

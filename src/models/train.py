@@ -13,7 +13,9 @@ def main(processed_path = "data/processed",
          models_path = "models",
          y_name = 'ranking_log'):
     
-    """Trains the model."""
+    """Nested 10-fold cross-validation for linear regression of
+    ranking_log and score with with lasso regularization
+    (inner CV for alpha tuning, outer for R^2 robustness)."""
     
     # logging
     logger = logging.getLogger(__name__)
@@ -43,12 +45,10 @@ def main(processed_path = "data/processed",
     y = y[y_name].values
     logger.info("Set y to '{}'.".format(y_name))
     
-    #%% Nested 10-fold cross-validation for linear regression of ranking_log
-    #   with lasso regularization (inner CV for alpha tuning, outer for R^2 robustness)
+    #%% define hyperparameter
     
     start = time()
-    
-    # define hyperparameter
+
 #    # define list of 100 alphas to test: from 1 logarithmically decreasing to 0
 #    BASE = 1 + 1/5
 #    logger.debug("Constant BASE is set to {}.".format(BASE))
@@ -81,19 +81,20 @@ def main(processed_path = "data/processed",
                          MAX_ITER, TOL, CV, N_JOBS, RS, SELECTION))
     logger.debug("Try following L1-ratios: {}".format(L1_RATIOS))
     
-    # print R^2 values for bounding alphas 0 and 1 to make sense of alphas
-    logger.info("Bounding score: R^2 for alpha=0 and l1_ratio=0.5: {}"
-                .format(ElasticNet(alpha=0, l1_ratio=.5,
-                                   normalize=NORMALIZE, random_state=42)
-                        .fit(X, y)
-                        .score(X, y)))
-    logger.info("Bounding score: R^2 for alpha=1 and l1_ratio=0.5: {}"
-                .format(ElasticNet(alpha=1, l1_ratio=.5,
-                                   normalize=NORMALIZE, random_state=42)
-                        .fit(X, y)
-                        .score(X, y)))
+#    # print R^2 values for bounding alphas 0 and 1 to make sense of alphas
+#    logger.info("Bounding score: R^2 for alpha=0 and l1_ratio=0.5: {}"
+#                .format(ElasticNet(alpha=0.000000001, l1_ratio=.5,
+#                                   normalize=NORMALIZE, random_state=42)
+#                        .fit(X, y)
+#                        .score(X, y)))
+#    logger.info("Bounding score: R^2 for alpha=1 and l1_ratio=0.5: {}"
+#                .format(ElasticNet(alpha=1, l1_ratio=.5,
+#                                   normalize=NORMALIZE, random_state=42)
+#                        .fit(X, y)
+#                        .score(X, y)))
     
-    # train model
+    #%% train model
+    
     mod = ElasticNetCV(l1_ratio = L1_RATIOS,
                        eps = EPS,
                        n_alphas = N_ALPHAS,
@@ -117,7 +118,8 @@ def main(processed_path = "data/processed",
     coef = pd.Series(data=mod.coef_, index=X_columns)
     logger.debug("best coefficients:\n{}".format(coef))
     
-    # Nested Cross-Validation to test robustness of R^2
+    #%% Nested Cross-Validation to test robustness of R^2
+    
     cv_results = cross_validate(ElasticNetCV(l1_ratio = L1_RATIOS,
                                              eps = EPS,
                                              n_alphas = N_ALPHAS,
@@ -137,7 +139,8 @@ def main(processed_path = "data/processed",
     logger.debug("Nested cross-validation results:\n{}"
                 .format(pd.DataFrame(data=cv_results)))
     
-    # Elastic Net regression with statsmodels for summary
+    #%% Elastic Net regression with statsmodels for summary
+    
     mod_sm = sm.OLS(y, sm.add_constant(pd.DataFrame(data=X,
                                                     columns=X_columns,
                                                     index=X_index)))\

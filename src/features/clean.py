@@ -55,77 +55,77 @@ def main(interim_path = "data/interim",
     #%% cleaning columns
     
     # drop mean columns since mostly irrelevant
-    cleaned_df = features_df.drop('mean', axis=1, level=1)
-    logger.info("Created cleaned_df by dropping all 'mean' features. Shape: {}"
-                .format(cleaned_df.shape))
+    X = features_df.drop('mean', axis=1, level=1)
+    logger.info("Created X by dropping all 'mean' features. Shape: {}"
+                .format(X.shape))
     
     # re-include relevant columns from means
-    cleaned_df = pd.concat([features_df[('radon_cc_mean', 'mean')],
+    X = pd.concat([features_df[('radon_cc_mean', 'mean')],
                             features_df[('radon_mi_mean', 'mean')],
                             features_df[('radon_raw_is_error', 'mean')],
                             features_df[('radon_cc_is_error', 'mean')],
                             features_df[('radon_h_is_error', 'mean')],
                             features_df[('radon_mi_is_error', 'mean')],
                             features_df[('pylint_is_error', 'mean')],
-                            cleaned_df], axis=1)
+                            X], axis=1)
     logger.info("Re-included 7 relevant 'mean' features. Shape: {}"
-                .format(cleaned_df.shape))
+                .format(X.shape))
     
     # drop column (radon_cc_mean, sum) since it doesn't make sense
-    cleaned_df.drop([('radon_cc_mean', 'sum')], axis=1, inplace=True)
+    X.drop([('radon_cc_mean', 'sum')], axis=1, inplace=True)
     logger.info("Dropped column (radon_cc_mean, sum). Shape: {}"
-                .format(cleaned_df.shape))
+                .format(X.shape))
     
     # drop halstead metrics since they are not additive thus wrong
-    cleaned_df.drop([('radon_h_calculated_length', 'sum'),
-                     ('radon_h_volume', 'sum'),
-                     ('radon_h_difficulty', 'sum'),
-                     ('radon_h_effort', 'sum'),
-                     ('radon_h_time', 'sum'),
-                     ('radon_h_bugs', 'sum')],
-                    axis=1, inplace=True)
+    X.drop([('radon_h_calculated_length', 'sum'),
+            ('radon_h_volume', 'sum'),
+            ('radon_h_difficulty', 'sum'),
+            ('radon_h_effort', 'sum'),
+            ('radon_h_time', 'sum'),
+            ('radon_h_bugs', 'sum')],
+            axis=1, inplace=True)
     logger.info("Dropped 6 wrong calculated Halstead metrics. Shape: {}"
-                .format(cleaned_df.shape))
+                .format(X.shape))
     
     # construct correct halstead metrics
     # see: https://radon.readthedocs.io/en/latest/intro.html#halstead-metrics
-    cleaned_df[('radon_h_calculated_length', 'custom')] = cleaned_df[('radon_h_h1', 'sum')] \
-            * np.log2(cleaned_df[('radon_h_h1', 'sum')]) \
-            + cleaned_df[('radon_h_h2', 'sum')] \
-            * np.log2(cleaned_df[('radon_h_h2', 'sum')])
-    cleaned_df[('radon_h_volume', 'custom')] = cleaned_df[('radon_h_length', 'sum')] \
-            * np.log2(cleaned_df[('radon_h_vocabulary', 'sum')])
-    cleaned_df[('radon_h_difficulty', 'custom')] = cleaned_df[('radon_h_h1', 'sum')] / 2 \
-            * cleaned_df[('radon_h_N2', 'sum')] / cleaned_df[('radon_h_h2', 'sum')]
-    cleaned_df[('radon_h_effort', 'custom')] = cleaned_df[('radon_h_difficulty', 'custom')] \
-            * cleaned_df[('radon_h_volume', 'custom')]
+    X[('radon_h_calculated_length', 'custom')] = X[('radon_h_h1', 'sum')] \
+            * np.log2(X[('radon_h_h1', 'sum')]) \
+            + X[('radon_h_h2', 'sum')] \
+            * np.log2(X[('radon_h_h2', 'sum')])
+    X[('radon_h_volume', 'custom')] = X[('radon_h_length', 'sum')] \
+            * np.log2(X[('radon_h_vocabulary', 'sum')])
+    X[('radon_h_difficulty', 'custom')] = X[('radon_h_h1', 'sum')] / 2 \
+            * X[('radon_h_N2', 'sum')] / X[('radon_h_h2', 'sum')]
+    X[('radon_h_effort', 'custom')] = X[('radon_h_difficulty', 'custom')] \
+            * X[('radon_h_volume', 'custom')]
     # Following two Halstead metrics are skipped since propotional to other
-    # cleaned_df[('radon_h_time', 'custom')] = cleaned_df[('radon_h_effort', 'custom')] / 18
-    # cleaned_df[('radon_h_bugs', 'custom')] = cleaned_df[('radon_h_volume', 'custom')] / 3000
+    # X[('radon_h_time', 'custom')] = X[('radon_h_effort', 'custom')] / 18
+    # X[('radon_h_bugs', 'custom')] = X[('radon_h_volume', 'custom')] / 3000
     logger.info("Re-constructed 4 relevant Halstead metrics. Shape: {}"
-                .format(cleaned_df.shape))
+                .format(X.shape))
     
     # transforms features to become ratios of loc to avoid multi-collinearity
     # calculate maximum number for lines of codes, since inconsistent
     loc_max = pd.concat([
-            cleaned_df[('radon_raw_loc', 'sum')],
-            cleaned_df[('radon_raw_lloc', 'sum')],
-            cleaned_df[('radon_raw_sloc', 'sum')]
-                    + cleaned_df[('radon_raw_multi', 'sum')]
-                    + cleaned_df[('radon_raw_single_comments', 'sum')]
-                    + cleaned_df[('radon_raw_blank', 'sum')],
-            cleaned_df[('pylint_code', 'sum')]
-                    + cleaned_df[('pylint_docstring', 'sum')]
-                    + cleaned_df[('pylint_comment', 'sum')]
-                    + cleaned_df[('pylint_empty', 'sum')]], axis=1)
+            X[('radon_raw_loc', 'sum')],
+            X[('radon_raw_lloc', 'sum')],
+            X[('radon_raw_sloc', 'sum')]
+                    + X[('radon_raw_multi', 'sum')]
+                    + X[('radon_raw_single_comments', 'sum')]
+                    + X[('radon_raw_blank', 'sum')],
+            X[('pylint_code', 'sum')]
+                    + X[('pylint_docstring', 'sum')]
+                    + X[('pylint_comment', 'sum')]
+                    + X[('pylint_empty', 'sum')]], axis=1)
     loc_max = loc_max.max(axis=1)
-    cleaned_df.drop(columns=[('radon_raw_loc', 'sum'), ('radon_raw_lloc', 'sum')],
+    X.drop(columns=[('radon_raw_loc', 'sum'), ('radon_raw_lloc', 'sum')],
             inplace=True)
     logger.info("Dropped 'radon_raw_loc' and 'radon_raw_lloc'. Shape: {}"
-                .format(cleaned_df.shape))
+                .format(X.shape))
     # create list of columns, which are correlated/dependent to max_loc
     dependent = []
-    for col in cleaned_df.columns:
+    for col in X.columns:
         if col[1] == 'mean' or '_is_error' in col[0] or col[0] == 'loc_max':
             logger.debug("Skipped independent feature: {}".format(col))
             continue
@@ -134,36 +134,36 @@ def main(interim_path = "data/interim",
             logger.debug("Included dependent feature:  {}".format(col))
         elif 'uses_module_' in col[0]:
             # set every value > 0 to 1 because you only want indication
-            cleaned_df[col].where(cleaned_df[col]==0, other=1, inplace=True)
+            X[col].where(X[col]==0, other=1, inplace=True)
             logger.debug("Skipped independent feature: {}".format(col))
             continue
         else:
             logger.error("{} not catched during creation of list 'dependent'."
                          .format(col))
     for col in dependent:
-        cleaned_df[(col[0]+'_ratio', 'ratio')] = cleaned_df[col]/loc_max
+        X[(col[0]+'_ratio', 'ratio')] = X[col]/loc_max
         logger.debug("Created new ratio feature for: {}".format(col))
-    cleaned_df.drop(columns=dependent, inplace=True)
+    X.drop(columns=dependent, inplace=True)
     logger.info("Transformed {} features to ratios of lines-of-code. Shape: {}"
-                .format(len(dependent), cleaned_df.shape))
+                .format(len(dependent), X.shape))
     # create new column as log-transformed loc_max
-    cleaned_df[('loc_max_log', 'max')] = np.log(loc_max)
+    X[('loc_max_log', 'max')] = np.log(loc_max)
     logger.info("Added column 'loc_max_log'. Shape: {}"
-                .format(cleaned_df.shape))
+                .format(X.shape))
     
     #%% cleaning rows
     
     # delete repos with too many errors during feature extraction
-    cleaned_df = cleaned_df[cleaned_df[('radon_raw_is_error', 'mean')] != 1]
-    cleaned_df = cleaned_df[cleaned_df[('radon_cc_is_error', 'mean')] != 1]
-    cleaned_df = cleaned_df[cleaned_df[('radon_h_is_error', 'mean')] != 1]
-    cleaned_df = cleaned_df[cleaned_df[('radon_mi_is_error', 'mean')] != 1]
-    cleaned_df = cleaned_df[cleaned_df[('pylint_is_error', 'mean')] != 1]
+    X = X[X[('radon_raw_is_error', 'mean')] != 1]
+    X = X[X[('radon_cc_is_error', 'mean')] != 1]
+    X = X[X[('radon_h_is_error', 'mean')] != 1]
+    X = X[X[('radon_mi_is_error', 'mean')] != 1]
+    X = X[X[('pylint_is_error', 'mean')] != 1]
     logger.info("Dropped all rows with error rates = 1. Shape: {}"
-                .format(cleaned_df.shape))
+                .format(X.shape))
     
     # drop columns of error rates
-    cleaned_df.drop(columns=[('radon_raw_is_error', 'mean'),
+    X.drop(columns=[('radon_raw_is_error', 'mean'),
                      ('radon_cc_is_error', 'mean'),
                      ('radon_h_is_error', 'mean'),
                      ('radon_mi_is_error', 'mean'),
@@ -174,51 +174,51 @@ def main(interim_path = "data/interim",
                      ('radon_mi_is_error', 'sum'),
                      ('pylint_is_error', 'sum'),], inplace=True)
     logger.info("Dropped 10 is_error columns. Shape: {}"
-                .format(cleaned_df.shape))
+                .format(X.shape))
     
     # drop second level of MultiIndex
-    cleaned_df.columns = cleaned_df.columns.droplevel(level=1)    
+    X.columns = X.columns.droplevel(level=1)    
     
-    # concatenate cleaned_df with Score and log-transfomated Ranking
-    cleaned_df = pd.concat(
+    # concatenate X with Score and log-transfomated Ranking
+    X = pd.concat(
             [pd.to_numeric(teams_df.Score).rename('score'),
              np.log(pd.to_numeric(teams_df.Ranking)).rename('ranking_log'),
-             cleaned_df], join='inner', axis=1)
+             X], join='inner', axis=1)
     logger.info("Concatenated 'score' and log-transformed 'ranking_log'. Shape: {}"
-                .format(cleaned_df.shape))
+                .format(X.shape))
     
     # drop repos with outliers
-#    desc = cleaned_df.describe().T
+#    desc = X.describe().T
 #    top = (desc['max'] - desc['50%']) / desc['std']
 #    bottom = (desc['50%']-desc['min']) / desc['std']
 #    desc.loc[top>5]
 #    desc.loc[bottom>3]
-    cleaned_df = cleaned_df[cleaned_df.score <= 1] # 16
+    X = X[X.score <= 1] # 16
     logger.info("Dropped rows with score > 1. Shape: {}"
-                .format(cleaned_df.shape))
-    cleaned_df = cleaned_df[cleaned_df.loc_max_log <= np.log(10000)] # 4
+                .format(X.shape))
+    X = X[(4 <= X.loc_max_log) & (X.loc_max_log <= 10)] # 2
     logger.info("Dropped rows with lines of code > 10.000. Shape: {}"
-                .format(cleaned_df.shape))
-    cleaned_df = cleaned_df[cleaned_df.pylint_warning_ratio <= 1] # 3
+                .format(X.shape))
+    X = X[X.pylint_warning_ratio <= 1] # 3
     logger.info("Dropped rows with pylint_warning_ratio > 1. Shape: {}"
-                .format(cleaned_df.shape))
-    cleaned_df = cleaned_df[cleaned_df.radon_h_effort_ratio <= 1000] # 4
+                .format(X.shape))
+    X = X[X.radon_h_effort_ratio <= 1000] # 6
     logger.info("Dropped rows with radon_h_effort_ratio > 1000. Shape: {}"
-                .format(cleaned_df.shape))
-    cleaned_df = cleaned_df[cleaned_df.radon_h_difficulty_ratio <= .1] # 1
+                .format(X.shape))
+    X = X[X.radon_h_difficulty_ratio <= .07] # 2
     logger.info("Dropped rows with radon_h_difficulty_ratio > 0.1. Shape: {}"
-                .format(cleaned_df.shape))
-    cleaned_df = cleaned_df[cleaned_df.radon_cc_mean <= 7.5] # 4
+                .format(X.shape))
+    X = X[X.radon_cc_mean <= 9] # 4
     logger.info("Dropped rows with radon_cc_mean > 7.5. Shape: {}"
-                .format(cleaned_df.shape))
+                .format(X.shape))
     
     # delete rows with NaNs
-    cleaned_df.dropna(inplace=True)
+    X.dropna(inplace=True)
     logger.info("Dropped all rows with NaNs. Shape: {}"
-                .format(cleaned_df.shape))
+                .format(X.shape))
     
     #%% concat with teams_df shuffle the data
-    cleaned_df = pd.concat([teams_df, cleaned_df], join='inner', axis=1)
+    cleaned_df = pd.concat([teams_df, X], join='inner', axis=1)
     cleaned_df = shuffle(cleaned_df, random_state=0)
     
     #%% export cleaned_df as pickle file to processed folder

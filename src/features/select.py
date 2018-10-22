@@ -24,7 +24,9 @@ def main(processed_path = "data/processed"):
                 .format(cleaned_df.shape))
     
     #%% split df into dependent and independent variables
-    teams_df, y, X = cleaned_df.iloc[:, :9], cleaned_df.iloc[:, 9:11], cleaned_df.iloc[:, 11:]
+    teams_df = cleaned_df.iloc[:, :9]
+    y = cleaned_df.iloc[:, 9:11]
+    X = cleaned_df.iloc[:, 11:]
     n = len(X)
     start = time()
     
@@ -88,10 +90,10 @@ def main(processed_path = "data/processed"):
     
     i_uses_module = i_core | i_vis | i_ml | i_dl
     interesting = i_radon | i_pylint | i_uses_module | {'loc_max_log'}
-    selected_df = X.drop(columns=set(X.columns)-interesting, errors='ignore')
+    X.drop(columns=set(X.columns)-interesting, errors='ignore', inplace=True)
     
     counts = pd.Series(
-            data = [selected_df.shape[0] - sum(selected_df[col] == 0)
+            data = [X.shape[0] - sum(X[col] == 0)
                     for col in interesting],
             index = interesting)
     logger.info("Manually set potentially interesting features:\n{}"
@@ -99,20 +101,20 @@ def main(processed_path = "data/processed"):
     
     #%% aggregate uses_module features per functionality
     
-    selected_df['core'] = selected_df.loc[:, i_core].any(axis=1).astype(int)
-    selected_df.drop(columns=i_core, inplace=True)
-    selected_df['visualization'] = selected_df.loc[:, i_vis].any(axis=1).astype(int)
-    selected_df.drop(columns=i_vis, inplace=True)
-    selected_df['machine_learning'] = selected_df.loc[:, i_ml].any(axis=1).astype(int)
-    selected_df.drop(columns=i_ml, inplace=True)
-    selected_df['deep_learning'] = selected_df.loc[:, i_dl].any(axis=1).astype(int)
-    selected_df.drop(columns=i_dl, inplace=True)
+    X['core'] = X.loc[:, i_core].any(axis=1).astype(int)
+    X.drop(columns=i_core, inplace=True)
+    X['visualization'] = X.loc[:, i_vis].any(axis=1).astype(int)
+    X.drop(columns=i_vis, inplace=True)
+    X['machine_learning'] = X.loc[:, i_ml].any(axis=1).astype(int)
+    X.drop(columns=i_ml, inplace=True)
+    X['deep_learning'] = X.loc[:, i_dl].any(axis=1).astype(int)
+    X.drop(columns=i_dl, inplace=True)
     
     #%% univariate feature selection
     
     # drop features with more than 90% zeros
-    dropped = selected_df.columns[(selected_df == 0).sum() / n > .9]
-    selected_df.drop(columns=dropped, errors='ignore', inplace=True)
+    dropped = X.columns[(X == 0).sum() / n > .9]
+    X.drop(columns=dropped, errors='ignore', inplace=True)
     logger.info(("Dropped {} features which had more than 90% zeros:\n"
                  + ('\n'+' '*56).join(dropped)).format(len(dropped)))
     # print warning if dropped important features (not in pylint_rest)
@@ -124,39 +126,39 @@ def main(processed_path = "data/processed"):
     
     #%% multivariate feature selection
     
-#    # define recursive dropping function
-#    def drop_max_vif(X, logger, steps=-1):
-#        """Recursively drops feature with highest VIF, until all VIFs < 10
-#        or if <steps> > 0 defined: at most <steps> drops."""
-#        vif = pd.Series(data = [variance_inflation_factor(X.values, i)
-#                                for i in range(X.shape[1])],
-#                        index = X.columns)
-#        if vif.max() < 10 or steps == 0:
-#            return X
-#        else:
-#            drop = vif.idxmax()
-#            if drop not in pylint_rest:
-#                logger.warning("Dropped {} (VIF = {}).".format(drop, vif[drop]))
-#            else:
-#                logger.info("Dropped {} (VIF = {}).".format(drop, vif[drop]))
-#            return drop_max_vif(X.drop(columns=drop), logger, steps-1)
-#    
-#    # remove multi-collinearity through VIF
-#    logger.info("Start dropping features with high VIF.")
-#    n_old = selected_df.shape[1]
-#    selected_df = drop_max_vif(selected_df, logger, steps=1)
-#    n_new = selected_df.shape[1]
-#    vif = pd.Series(data = [variance_inflation_factor(selected_df.values, i)
-#                            for i in range(selected_df.shape[1])],
-#                    index = selected_df.columns)
-#    logger.info("Dropped {} features with VIF > 10".format(n_old-n_new))
-#    logger.info("Remaining {} features are:\n".format(len(vif))
-#                + '\n'.join([' '*56 + '{:<50} {}'.format(x, y) 
-#                            for (x, y) in zip(vif.index, vif)]))
+    # define recursive dropping function
+    def drop_max_vif(X, logger, steps=-1, vif_max=10):
+        """Recursively drops feature with highest VIF, until all VIFs < 10
+        or if <steps> > 0 defined: at most <steps> drops."""
+        vif = pd.Series(data = [variance_inflation_factor(X.values, i)
+                                for i in range(X.shape[1])],
+                        index = X.columns)
+        if vif.max() < vif_max or steps == 0:
+            return X
+        else:
+            drop = vif.idxmax()
+            if drop not in pylint_rest:
+                logger.warning("Dropped {} (VIF = {}).".format(drop, vif[drop]))
+            else:
+                logger.info("Dropped {} (VIF = {}).".format(drop, vif[drop]))
+            return drop_max_vif(X.drop(columns=drop), logger, steps-1, vif_max)
     
-     #%% concat teams_df, y and selected_df
+    # remove multi-collinearity through VIF
+    logger.info("Start dropping features with high VIF.")
+    n_old = X.shape[1]
+    X = drop_max_vif(X, logger, steps=-1, vif_max=15)
+    n_new = X.shape[1]
+    vif = pd.Series(data = [variance_inflation_factor(X.values, i)
+                            for i in range(X.shape[1])],
+                    index = X.columns)
+    logger.info("Dropped {} features with VIF > 10".format(n_old-n_new))
+    logger.info("Remaining {} features are:\n".format(len(vif))
+                + '\n'.join([' '*56 + '{:<50} {}'.format(x, y) 
+                            for (x, y) in zip(vif.index, vif)]))
     
-    selected_df = pd.concat([teams_df, y, selected_df], axis=1)
+     #%% concat teams_df, y and X to selected_df
+    
+    selected_df = pd.concat([teams_df, y, X], axis=1)
     
     #%% export selected_df as pickle file to processed folder
     selected_df.to_pickle(os.path.join(processed_path, 'selected_df.pkl'))

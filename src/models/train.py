@@ -39,10 +39,9 @@ def main(processed_path = "data/processed",
     X = selected_df.iloc[:, 11:]
     X_columns = X.columns
     X_index = X.index
-    X = X.values
     
     # set y to either ranking_log or score
-    y = y[y_name].values
+    y = y[y_name]
     logger.info("Set y to '{}'.".format(y_name))
     
     #%% define hyperparameter
@@ -85,13 +84,13 @@ def main(processed_path = "data/processed",
 #    logger.info("Bounding score: R^2 for alpha=0 and l1_ratio=0.5: {}"
 #                .format(ElasticNet(alpha=0.000000001, l1_ratio=.5,
 #                                   normalize=NORMALIZE, random_state=42)
-#                        .fit(X, y)
-#                        .score(X, y)))
+#                        .fit(X.values, y.values)
+#                        .score(X.values, y.values)))
 #    logger.info("Bounding score: R^2 for alpha=1 and l1_ratio=0.5: {}"
 #                .format(ElasticNet(alpha=1, l1_ratio=.5,
 #                                   normalize=NORMALIZE, random_state=42)
-#                        .fit(X, y)
-#                        .score(X, y)))
+#                        .fit(X.values, y.values)
+#                        .score(X.values, y.values)))
     
     #%% train model
     
@@ -106,10 +105,10 @@ def main(processed_path = "data/processed",
                        n_jobs = N_JOBS,
                        random_state = RS,
                        selection = SELECTION)\
-          .fit(X, y)
+          .fit(X.values, y.values)
     
     # log some statistics
-    logger.info("best R^2 score: {}".format(mod.score(X, y)))
+    logger.info("best R^2 score: {}".format(mod.score(X.values, y.values)))
     best_l1_ratio = mod.l1_ratio_
     logger.info("best l1_ratio: {}".format(best_l1_ratio))
     best_alpha = mod.alpha_
@@ -131,7 +130,7 @@ def main(processed_path = "data/processed",
                                              n_jobs = N_JOBS,
                                              random_state = RS,
                                              selection = SELECTION),
-                                X, y, cv=CV,
+                                X.values, y.values, cv=CV,
                                 return_train_score=True, n_jobs=N_JOBS)
     logger.info("95% confidence intervall: {:.2f} +/- {:.2f} (mean +/- 2*std)"
                 .format(cv_results['test_score'].mean(),
@@ -141,7 +140,7 @@ def main(processed_path = "data/processed",
     
     #%% Elastic Net regression with statsmodels for summary
     
-    mod_sm = sm.OLS(y, sm.add_constant(pd.DataFrame(data=X,
+    mod_sm = sm.OLS(y.values, sm.add_constant(pd.DataFrame(data=X.values,
                                                     columns=X_columns,
                                                     index=X_index)))\
           .fit_regularized(method='elastic_net',

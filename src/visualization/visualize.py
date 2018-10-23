@@ -8,30 +8,27 @@ from sklearn.feature_selection import f_regression, SelectKBest
 sns.set_context('paper')
 
 # score and ranking
-sns.scatterplot(x=X.loc_max_log, y=y.score)
+sns.scatterplot(x=y.ranking_log, y=y.score)
 
 # histogram
-sns.distplot(y.score)
+sns.distplot(y, bins=50)
 sns.distplot(y.ranking_log)
 sns.distplot(X.loc_max_log)
 sns.distplot(X.pylint_warning_ratio)
-sns.distplot(X.radon_cc_mean)
-sns.distplot(X.radon_h_difficulty_ratio)
 sns.distplot(X.radon_h_effort_ratio)
 sns.distplot(X.radon_mi_mean)
 sns.distplot(X.pylint_)
 sns.distplot(X.loc_max_log)
 # pairplot
-sns.pairplot(X.drop(columns=['core',
-                             'visualization',
-                             'machine_learning',
-                             'deep_learning'], axis=1))
+sns.pairplot(X[['score','loc_max_log','pylint_warning_ratio',
+                    'radon_h_effort_ratio','radon_h_difficulty_ratio',
+                    'radon_cc_mean']])
 
 # boxplot
 sns.boxplot(data=X)
 
 # residual plot
-sns.residplot(X.loc_max_log, y.score, lowess=True)
+sns.residplot(x=mod_sm.fittedvalues, y=y, data=X, lowess=True)
 
 # correlation coefficient matrix
 corr = X.corr()

@@ -2,10 +2,13 @@
 
 import os, logging, argparse
 import pandas as pd
+import numpy as np
 from time import time
 from sklearn.linear_model import ElasticNet, ElasticNetCV
 from sklearn.model_selection import cross_validate
 import statsmodels.api as sm
+import statsmodels.stats.api as sms
+from statsmodels.compat import lzip
 import pickle
 
 
@@ -28,7 +31,7 @@ def main(processed_path = "data/processed",
     logger.debug("Path to models normalized: {}"
                  .format(models_path))
     
-    # load df, either cleaned, cleaned_pca, selected, selected_pca
+    # load selected_df
     selected_df = pd.read_pickle(os.path.join(processed_path, 'selected_df.pkl'))
     logger.info("Loaded selected_df. Shape of df: {}"
                 .format(selected_df.shape))
@@ -150,6 +153,38 @@ def main(processed_path = "data/processed",
     res = mod_sm.summary().as_text()
     logger.info("ElasticNet regression (from sm) of selected_df with respect to '{}' with alpha={} and L1_wt={}:\n{}"
                 .format(y_name, best_alpha, best_l1_ratio, res))
+    
+    # Normality of residuals
+    # Jarque-Bera test:
+    name = ['Jarque-Bera', 'Chi^2 two-tail prob.', 'Skew', 'Kurtosis']
+    test = sms.jarque_bera(mod_sm.resid)
+    lzip(name, test)
+    # Omni test:
+    name = ['Chi^2', 'Two-tail probability']
+    test = sms.omni_normtest(mod_sm.resid)
+    lzip(name, test)
+    
+    # Multicollinearity
+    # Conditional Number:
+    np.linalg.cond(mod_sm.model.exog)
+    
+    # Heteroskedasticity tests
+    # Breush-Pagan test:
+    name = ['Lagrange multiplier statistic', 'p-value', 
+        'f-value', 'f p-value']
+    test = sms.het_breuschpagan(mod_sm.resid, mod_sm.model.exog)
+    lzip(name, test)
+    # Goldfeld-Quandt test
+    name = ['F statistic', 'p-value']
+    test = sms.het_goldfeldquandt(mod_sm.resid, mod_sm.model.exog)
+    lzip(name, test)
+    
+    # Linearity
+    # Harvey-Collier multiplier test for Null hypothesis that
+    # the linear specification is correct:
+    name = ['t value', 'p value']
+    test = sms.linear_harvey_collier(mod_sm)
+    lzip(name, test)
     
     #%% export results as pickle file to models folder
     

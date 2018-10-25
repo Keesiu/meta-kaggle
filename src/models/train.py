@@ -10,7 +10,7 @@ import statsmodels.api as sm
 import statsmodels.stats.api as sms
 from statsmodels.compat import lzip
 import pickle
-
+from sklearn.preprocessing import StandardScaler
 
 def main(processed_path = "data/processed",
          models_path = "models",
@@ -47,6 +47,23 @@ def main(processed_path = "data/processed",
     y = y[y_name]
     logger.info("Set y to '{}'.".format(y_name))
     
+    #%% standardize
+    
+    scaler = StandardScaler()
+    not_standardize = ['core',
+                       'visualization',
+                       'machine_learning',
+                       'deep_learning']
+    X_standardized = scaler.fit_transform(X
+                                          .drop(columns=not_standardize)
+                                          .values)
+    X_standardized = pd.DataFrame(X_standardized,
+                                  index = X.index,
+                                  columns = X.columns.drop(not_standardize))
+    X_not_standardized = X[not_standardize]
+    X = pd.concat([X_standardized, X_not_standardized], axis=1)
+    logger.info("After Standardization:\n{}".format(X.describe()))
+    
     #%% define hyperparameter
     
     start = time()
@@ -70,7 +87,7 @@ def main(processed_path = "data/processed",
     # If True, the regressors X will be normalized before regression by
     # subtracting the mean (column-wise) and dividing by the l2-norm in
     # order for each feature to have norm = 1.
-    NORMALIZE = True
+    NORMALIZE = False
     MAX_ITER = 1000
     TOL = 0.0001
     CV = 10

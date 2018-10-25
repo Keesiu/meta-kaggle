@@ -4,6 +4,7 @@ import os, logging, argparse
 import pandas as pd
 from time import time
 from statsmodels.stats.outliers_influence import variance_inflation_factor
+from collections import Counter
 
 
 def main(processed_path = "data/processed"):
@@ -24,6 +25,11 @@ def main(processed_path = "data/processed"):
                 .format(cleaned_df.shape))
     
     #%% split df into dependent and independent variables
+    
+#    # optionally select subset by CompetitionId
+#    counter = Counter(cleaned_df.CompetitionId)
+#    cleaned_df = cleaned_df.loc[cleaned_df.CompetitionId == counter.most_common(1)[0][0]]
+    
     teams_df = cleaned_df.iloc[:, :9]
     y = cleaned_df.iloc[:, 9:11]
     X = cleaned_df.iloc[:, 11:]

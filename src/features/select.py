@@ -102,8 +102,9 @@ def main(processed_path = "data/processed"):
             data = [X.shape[0] - sum(X[col] == 0)
                     for col in interesting],
             index = interesting)
-    logger.info("Manually set potentially interesting features:\n{}"
-                .format(counts.sort_values(ascending=False)))
+    logger.info("Manually set potentially interesting features.")
+    logger.debug("Interesting features sorted by counts:\n{}"
+                 .format(counts.sort_values(ascending=False)))
     
     #%% aggregate uses_module features per functionality
     
@@ -121,8 +122,10 @@ def main(processed_path = "data/processed"):
     # drop features with more than 90% zeros
     dropped = X.columns[(X == 0).sum() / n > .9]
     X.drop(columns=dropped, errors='ignore', inplace=True)
-    logger.info(("Dropped {} features which had more than 90% zeros:\n"
-                 + ('\n'+' '*56).join(dropped)).format(len(dropped)))
+    logger.info("Dropped {} features which had more than 90% zeros."
+                .format(len(dropped)))
+    logger.debug(("Following features had more than 90% zeros:\n"
+                  + ('\n'+' '*56).join(dropped)))
     # print warning if dropped important features (not in pylint_rest)
     if not all([d in pylint_rest for d in dropped]):
         logger.warning("Dropped feature: {}"
@@ -132,35 +135,35 @@ def main(processed_path = "data/processed"):
     
     #%% multivariate feature selection
     
-    # define recursive dropping function
-    def drop_max_vif(X, logger, steps=-1, vif_max=10):
-        """Recursively drops feature with highest VIF, until all VIFs < 10
-        or if <steps> > 0 defined: at most <steps> drops."""
-        vif = pd.Series(data = [variance_inflation_factor(X.values, i)
-                                for i in range(X.shape[1])],
-                        index = X.columns)
-        if vif.max() < vif_max or steps == 0:
-            return X
-        else:
-            drop = vif.idxmax()
-            if drop not in pylint_rest:
-                logger.warning("Dropped {} (VIF = {}).".format(drop, vif[drop]))
-            else:
-                logger.info("Dropped {} (VIF = {}).".format(drop, vif[drop]))
-            return drop_max_vif(X.drop(columns=drop), logger, steps-1, vif_max)
-    
-    # remove multi-collinearity through VIF
-    logger.info("Start dropping features with high VIF.")
-    n_old = X.shape[1]
-    X = drop_max_vif(X, logger, steps=-1, vif_max=15)
-    n_new = X.shape[1]
-    vif = pd.Series(data = [variance_inflation_factor(X.values, i)
-                            for i in range(X.shape[1])],
-                    index = X.columns)
-    logger.info("Dropped {} features with VIF > 10".format(n_old-n_new))
-    logger.info("Remaining {} features are:\n".format(len(vif))
-                + '\n'.join([' '*56 + '{:<50} {}'.format(x, y) 
-                            for (x, y) in zip(vif.index, vif)]))
+#    # define recursive dropping function
+#    def drop_max_vif(X, logger, steps=-1, vif_max=10):
+#        """Recursively drops feature with highest VIF, until all VIFs < 10
+#        or if <steps> > 0 defined: at most <steps> drops."""
+#        vif = pd.Series(data = [variance_inflation_factor(X.values, i)
+#                                for i in range(X.shape[1])],
+#                        index = X.columns)
+#        if vif.max() < vif_max or steps == 0:
+#            return X
+#        else:
+#            drop = vif.idxmax()
+#            if drop not in pylint_rest:
+#                logger.warning("Dropped {} (VIF = {}).".format(drop, vif[drop]))
+#            else:
+#                logger.info("Dropped {} (VIF = {}).".format(drop, vif[drop]))
+#            return drop_max_vif(X.drop(columns=drop), logger, steps-1, vif_max)
+#    
+#    # remove multi-collinearity through VIF
+#    logger.info("Start dropping features with high VIF.")
+#    n_old = X.shape[1]
+#    X = drop_max_vif(X, logger, steps=-1, vif_max=15)
+#    n_new = X.shape[1]
+#    vif = pd.Series(data = [variance_inflation_factor(X.values, i)
+#                            for i in range(X.shape[1])],
+#                    index = X.columns)
+#    logger.info("Dropped {} features with VIF > 10".format(n_old-n_new))
+#    logger.info("Remaining {} features are:\n".format(len(vif))
+#                + '\n'.join([' '*56 + '{:<50} {}'.format(x, y) 
+#                            for (x, y) in zip(vif.index, vif)]))
     
      #%% concat teams_df, y and X to selected_df
     

@@ -4,7 +4,8 @@ import os, logging, argparse
 import pandas as pd
 import numpy as np
 from time import time
-from sklearn.linear_model import ElasticNet, ElasticNetCV
+from sklearn.linear_model import ElasticNetCV
+from sklearn.linear_model import ElasticNet
 from sklearn.model_selection import cross_validate
 import statsmodels.api as sm
 import statsmodels.stats.api as sms
@@ -14,7 +15,7 @@ from sklearn.preprocessing import StandardScaler
 
 def main(processed_path = "data/processed",
          models_path = "models",
-         y_name = 'ranking_log'):
+         y_name = 'score'):
     
     """Nested 10-fold cross-validation for linear regression of
     ranking_log and score with with lasso regularization
@@ -62,7 +63,7 @@ def main(processed_path = "data/processed",
                                   columns = X.columns.drop(not_standardize))
     X_not_standardized = X[not_standardize]
     X = pd.concat([X_standardized, X_not_standardized], axis=1)
-    logger.info("After Standardization:\n{}".format(X.describe()))
+    logger.debug("After Standardization:\n{}".format(X.describe().to_string))
     
     #%% define hyperparameter
     
@@ -88,9 +89,9 @@ def main(processed_path = "data/processed",
     # subtracting the mean (column-wise) and dividing by the l2-norm in
     # order for each feature to have norm = 1.
     NORMALIZE = False
-    MAX_ITER = 1000
+    MAX_ITER = 10000
     TOL = 0.0001
-    CV = 10
+    CV = 20
     N_JOBS = 1
     RS = 1
     SELECTION = 'cyclic'
@@ -100,17 +101,17 @@ def main(processed_path = "data/processed",
                          MAX_ITER, TOL, CV, N_JOBS, RS, SELECTION))
     logger.debug("Try following L1-ratios: {}".format(L1_RATIOS))
     
-#    # print R^2 values for bounding alphas 0 and 1 to make sense of alphas
-#    logger.info("Bounding score: R^2 for alpha=0 and l1_ratio=0.5: {}"
-#                .format(ElasticNet(alpha=0.000000001, l1_ratio=.5,
-#                                   normalize=NORMALIZE, random_state=42)
-#                        .fit(X.values, y.values)
-#                        .score(X.values, y.values)))
-#    logger.info("Bounding score: R^2 for alpha=1 and l1_ratio=0.5: {}"
-#                .format(ElasticNet(alpha=1, l1_ratio=.5,
-#                                   normalize=NORMALIZE, random_state=42)
-#                        .fit(X.values, y.values)
-#                        .score(X.values, y.values)))
+    # print R^2 values for bounding alphas 0 and 1 to make sense of alphas
+    logger.info("Bounding score: R^2 for alpha=0 and l1_ratio=0.5: {}"
+                .format(ElasticNet(alpha=0, l1_ratio=.5,
+                                   normalize=NORMALIZE, random_state=RS)
+                        .fit(X.values, y.values)
+                        .score(X.values, y.values)))
+    logger.info("Bounding score: R^2 for alpha=1 and l1_ratio=0.5: {}"
+                .format(ElasticNet(alpha=1, l1_ratio=.5,
+                                   normalize=NORMALIZE, random_state=RS)
+                        .fit(X.values, y.values)
+                        .score(X.values, y.values)))
     
     #%% train model
     
@@ -128,14 +129,17 @@ def main(processed_path = "data/processed",
           .fit(X.values, y.values)
     
     # log some statistics
-    logger.info("best R^2 score: {}".format(mod.score(X.values, y.values)))
+    best_r2 = mod.score(X.values, y.values)
+    logger.info("best R^2 score: {:.2f}%".format(best_r2*100))
     best_l1_ratio = mod.l1_ratio_
     logger.info("best l1_ratio: {}".format(best_l1_ratio))
     best_alpha = mod.alpha_
-    logger.info("best alpha: {}".format(best_alpha))
-    logger.debug("tested alphas:\n{}".format(mod.alphas_))
+    logger.info("best alpha: {:.5f}".format(best_alpha))
+    alphas = mod.alphas_
+    logger.debug("tested alphas:\n{}".format(alphas))
     coef = pd.Series(data=mod.coef_, index=X_columns)
     logger.debug("best coefficients:\n{}".format(coef))
+#    mse_path = mod.mse_path_
     
     #%% Nested Cross-Validation to test robustness of R^2
     
@@ -168,40 +172,41 @@ def main(processed_path = "data/processed",
                            L1_wt=best_l1_ratio,
                            refit=True)
     res = mod_sm.summary().as_text()
-    logger.info("ElasticNet regression (from sm) of selected_df with respect to '{}' with alpha={} and L1_wt={}:\n{}"
+    logger.info("ElasticNet regression (from sm) of selected_df with respect to '{}' with alpha={:.5f} and L1_wt={}:\n{}"
                 .format(y_name, best_alpha, best_l1_ratio, res))
     
     # Normality of residuals
     # Jarque-Bera test:
     name = ['Jarque-Bera', 'Chi^2 two-tail prob.', 'Skew', 'Kurtosis']
     test = sms.jarque_bera(mod_sm.resid)
-    lzip(name, test)
+    logger.info("Jarque-Bera test: {}".format(lzip(name, test)))
     # Omni test:
     name = ['Chi^2', 'Two-tail probability']
     test = sms.omni_normtest(mod_sm.resid)
-    lzip(name, test)
+    logger.info("Omnibus test: {}".format(lzip(name, test)))
     
     # Multicollinearity
     # Conditional Number:
-    np.linalg.cond(mod_sm.model.exog)
+    logger.info("Conditional Number: {}"
+                .format(np.linalg.cond(mod_sm.model.exog)))
     
     # Heteroskedasticity tests
     # Breush-Pagan test:
     name = ['Lagrange multiplier statistic', 'p-value', 
         'f-value', 'f p-value']
     test = sms.het_breuschpagan(mod_sm.resid, mod_sm.model.exog)
-    lzip(name, test)
+    logger.info("Breush-Pagan test: {}".format(lzip(name, test)))
     # Goldfeld-Quandt test
     name = ['F statistic', 'p-value']
     test = sms.het_goldfeldquandt(mod_sm.resid, mod_sm.model.exog)
-    lzip(name, test)
+    logger.info("Goldfeld-Quandt test: {}".format(lzip(name, test)))
     
-    # Linearity
-    # Harvey-Collier multiplier test for Null hypothesis that
-    # the linear specification is correct:
-    name = ['t value', 'p value']
-    test = sms.linear_harvey_collier(mod_sm)
-    lzip(name, test)
+#    # Linearity (commented out because function broken)
+#    # Harvey-Collier multiplier test for Null hypothesis that
+#    # the linear specification is correct:
+#    name = ['t value', 'p value']
+#    test = sms.linear_harvey_collier(mod_sm)
+#    lzip(name, test)
     
     #%% export results as pickle file to models folder
     
@@ -254,10 +259,10 @@ if __name__ == '__main__':
                     (default: models)")
     parser.add_argument(
             '--y_name',
-            default = 'ranking_log',
+            default = 'score',
             help = "name of dependent variable to be trained on \
                     either 'ranking_log' or 'score' \
-                    (default: ranking_log)")
+                    (default: score)")
     args = parser.parse_args()
     
     # run main

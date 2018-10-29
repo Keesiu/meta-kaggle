@@ -75,12 +75,12 @@ def main(metadata_path, repos_path, interim_path, processed_path, models_path):
         select.main(processed_path)
         logging.info("Finished select.py.")
     
-    # tranforms selected_df with PCA and saves to pca_df
-    # additionally, saves the respective PCA components
-        if not os.path.isfile(os.path.join(processed_path, 'pca_df.pkl')):
-            logging.info("Starting pca.py for selected_df.")
-            pca.main(processed_path)
-            logging.info("Finished pca.py, created pca_df.pkl.")
+#    # tranforms selected_df with PCA and saves to pca_df
+#    # additionally, saves the respective PCA components
+#        if not os.path.isfile(os.path.join(processed_path, 'pca_df.pkl')):
+#            logging.info("Starting pca.py for selected_df.")
+#            pca.main(processed_path)
+#            logging.info("Finished pca.py, created pca_df.pkl.")
     
     # trains the elastic net regression on all possible combinations
     for y_name in ['ranking_log', 'score']:

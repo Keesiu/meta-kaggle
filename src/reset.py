@@ -3,10 +3,7 @@
 import os, shutil, argparse
 
 
-def main(repos_path = "data/external/repositories",
-         interim_path = "data/interim",
-         processed_path = "data/processed",
-         logs_path = "logs"):
+def main(repos_path, interim_path, processed_path, logs_path, models_path):
     
     """Resets project for clean re-run.
     
@@ -39,7 +36,11 @@ def main(repos_path = "data/external/repositories",
     for file in os.listdir(logs_path):
         if file[-4:] == '.log':
             os.remove(os.path.join(logs_path, file))
-
+    
+    # delete all pkl- and txt-files in models
+    for file in os.listdir(models_path):
+        if file[-4:] == '.pkl' or file[-4:] == '.txt':
+            os.remove(os.path.join(models_path, file))
 
 if __name__ == '__main__':
     
@@ -65,10 +66,16 @@ if __name__ == '__main__':
             '--logs_path',
             default = "logs",
             help = "path to log files (default: logs)")
+    parser.add_argument(
+            '--models_path',
+            default = "models",
+            help = "path to the trained models \
+                    (default: models)")
     args = parser.parse_args()
     
     # run main
     main(args.repos_path,
          args.interim_path,
          args.processed_path,
-         args.logs_path)
+         args.logs_path,
+         args.models_path)

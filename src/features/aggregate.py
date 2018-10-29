@@ -35,7 +35,8 @@ def main(metadata_path = "data/raw/meta-kaggle-2016",
                 .format(len(teams_df)))
     
     # load extracted_df
-    extracted_df = pd.read_pickle(os.path.join(interim_path, 'extracted_df.pkl'))
+    extracted_df = pd.read_pickle(os.path.join(interim_path,
+                                               'extracted_df.pkl'))
     logger.info("Loaded extracted_df.pkl with {} files."
                 .format(len(extracted_df)))
     
@@ -74,12 +75,12 @@ def main(metadata_path = "data/raw/meta-kaggle-2016",
             # calculate relevant statistics
             stats.extend([group[col_name].sum(), group[col_name].mean()])
         repos[repo_id] = stats
-    columns = list(itertools.product(extracted_df.columns[1:], ['sum', 'mean']))
+    columns = list(itertools.product(extracted_df.columns[1:], ['sum','mean']))
     # build aggregated_df from dict repos
     aggregated_df = pd.DataFrame.from_dict(repos,
                                            orient='index',
                                            columns=columns)
-    logger.info("{} features per script aggregated to {} features per repository (x2 because sum and mean)."
+    logger.info("{} features on script-level aggregated to {} on repo-level."
                 .format(extracted_df.shape[1]-1, aggregated_df.shape[1]))
     
     # concatenates teams_df with aggregated_df
@@ -108,7 +109,7 @@ if __name__ == '__main__':
     
     # parse arguments
     parser = argparse.ArgumentParser(
-            description = "Aggregates extracted features from script to repository level.")
+            description = "Aggregates extracted features.")
     parser.add_argument(
             '--metadata_path',
             default = "data/raw/meta-kaggle-2016",

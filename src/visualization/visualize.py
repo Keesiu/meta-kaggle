@@ -11,7 +11,7 @@ sns.set_context('paper')
 sns.scatterplot(x=y.ranking_log, y=y.score)
 
 # histogram
-sns.distplot(y, bins=50)
+sns.distplot(y.score, bins=50)
 sns.distplot(y.ranking_log)
 sns.distplot(X.loc_max_log)
 sns.distplot(X.pylint_warning_ratio)
@@ -20,9 +20,7 @@ sns.distplot(X.radon_mi_mean)
 sns.distplot(X.pylint_)
 sns.distplot(X.loc_max_log)
 # pairplot
-sns.pairplot(X[['score','loc_max_log','pylint_warning_ratio',
-                    'radon_h_effort_ratio','radon_h_difficulty_ratio',
-                    'radon_cc_mean']])
+sns.pairplot(pd.concat([y, X], axis=1))
 
 # boxplot
 sns.boxplot(data=X)

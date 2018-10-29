@@ -32,6 +32,10 @@ The cloned repository has the following basic structure:
     ├───visualization
     └───__pycache__
 ```
+
+### Include raw data "meta-kaggle-2016"
+The raw data is essentially the kaggle meta data from 2016. Its data set "meta-kaggle-2016" needs to be placed into the folder `data/raw'. Note, that this kaggle dataset is not available on Kaggle's webpage anymore, since a newer version (Meta Kaggle 2.0) was published (see: https://www.kaggle.com/kaggle/meta-kaggle/data).
+
 ### Create a suitable environment
 In order to create a suitable environment with the correct dependencies, use the yaml-file `environment.yaml`. I recommend using Anaconda as an envrionment manager. There, simply use `conda env create -f environment.yaml` to copy my setup (see: https://conda.io/docs/user-guide/tasks/manage-environments.html#creating-an-environment-from-an-environment-yml-file). Afterwards, activate it with `activate meta-kaggle`.
 

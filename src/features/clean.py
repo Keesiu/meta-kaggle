@@ -28,7 +28,8 @@ def main(interim_path = "data/interim",
                  .format(processed_path))
     
     # load aggregated_df
-    aggregated_df = pd.read_pickle(os.path.join(interim_path, 'aggregated_df.pkl'))
+    aggregated_df = pd.read_pickle(os.path.join(interim_path,
+                                                'aggregated_df.pkl'))
     logger.info("Loaded aggregated_df.pkl. Shape of df: {}"
                 .format(aggregated_df.shape))
     
@@ -179,12 +180,11 @@ def main(interim_path = "data/interim",
     # drop second level of MultiIndex
     X.columns = X.columns.droplevel(level=1)    
     
-    # concatenate X with Score and log-transfomated Ranking
+    # concatenate X with log-transfomated Ranking
     X = pd.concat(
-            [pd.to_numeric(teams_df.Score).rename('score'),
-             np.log(pd.to_numeric(teams_df.Ranking)).rename('ranking_log'),
-             X], join='inner', axis=1)
-    logger.info("Concatenated 'score' and log-transformed 'ranking_log'. Shape: {}"
+            [np.log(pd.to_numeric(teams_df.Ranking)).rename('ranking_log'), X],
+            join='inner', axis=1)
+    logger.info("Concatenated log-transformed 'ranking_log'. Shape: {}"
                 .format(X.shape))
     
     # drop repos with outliers
@@ -193,9 +193,9 @@ def main(interim_path = "data/interim",
 #    bottom = (desc['50%']-desc['min']) / desc['std']
 #    desc.loc[top>5]
 #    desc.loc[bottom>3]
-    X = X[X.score <= 1] # 16
-    logger.info("Dropped rows with score > 1. Shape: {}"
-                .format(X.shape))
+#    X = X[X.score <= 1] # 16
+#    logger.info("Dropped rows with score > 1. Shape: {}"
+#                .format(X.shape))
     X = X[(4 <= X.loc_max_log) & (X.loc_max_log <= 10)] # 2
     logger.info("Dropped rows with lines of code > 10.000. Shape: {}"
                 .format(X.shape))

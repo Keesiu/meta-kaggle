@@ -66,7 +66,8 @@ def main(interim_path = "data/interim"):
     # logging results
     n_radon_raw_error = extracted_df.radon_raw_is_error.sum()
     n_radon_raw_success = sum(extracted_df.radon_raw_loc >= 0)
-    logger.info("Extracted radon raw metrics: {} scripts, {} successes, {} errors."
+    logger.info("Finished extracting radon raw metrics.")
+    logger.info("{} scripts, {} successes, {} errors"
                 .format(n, n_radon_raw_success, n_radon_raw_error))
     
     #%% radon cyclomatic complexity metrics
@@ -84,7 +85,8 @@ def main(interim_path = "data/interim"):
     # logging results
     n_radon_cc_error = sum(extracted_df.radon_cc_is_error)
     n_radon_cc_success = sum([isinstance(x, list) for x in radon_cc])
-    logger.info("Extracted radon cyclomatic complexity metrics: {} scripts, {} successes, {} errors."
+    logger.info("Finished extracting radon cyclomatic complexity metrics.")
+    logger.info("{} scripts, {} successes, {} errors"
                 .format(n, n_radon_cc_success, n_radon_cc_error))
     
     #%% radon halstead metrics
@@ -110,7 +112,8 @@ def main(interim_path = "data/interim"):
     # logging results
     n_radon_h_error = extracted_df.radon_h_is_error.sum()
     n_radon_h_success = sum(extracted_df.radon_h_h1 >= 0)
-    logger.info("Extracted radon halstead metrics: {} scripts, {} successes, {} errors."
+    logger.info("Finished extracting radon halstead metrics.")
+    logger.info("{} scripts, {} successes, {} errors."
                 .format(n, n_radon_h_success, n_radon_h_error))
     
     #%% radon maintainability index metric
@@ -125,7 +128,8 @@ def main(interim_path = "data/interim"):
     # logging results
     n_radon_mi_error = extracted_df.radon_mi_is_error.sum()
     n_radon_mi_success = sum(extracted_df.radon_mi >= 0)
-    logger.info("Extracted radon maintainability index metric: {} scripts, {} successes, {} errors."
+    logger.info("Finished extracting radon maintainability index metric.")
+    logger.info("{} scripts, {} successes, {} errors."
                 .format(n, n_radon_mi_success, n_radon_mi_error))
     
     #%% pylint
@@ -147,7 +151,8 @@ def main(interim_path = "data/interim"):
     # logging results
     n_pylint_error = extracted_df.pylint_is_error.sum()
     n_pylint_success = n-n_pylint_error
-    logger.info("Extracted pylint metrics: {} scripts, {} successes, {} errors."
+    logger.info("Finished extracting pylint metrics.")
+    logger.info("{} scripts, {} successes, {} errors."
                 .format(n, n_pylint_success, n_pylint_error))
     
     #%% extract used modules
@@ -205,11 +210,11 @@ def try_radon_raw(series, index, logger):
     Output: list of 7 metrics: [loc, lloc, sloc, comments, multi, blank]"""
     try:
         result = radon.raw.analyze(series[index])
-        logger.debug("Successfully extracted radon raw metrics of file {}."
+        logger.debug("Successfully extracted radon_raw metrics of file {}."
                      .format(index))
         return list(result)
     except Exception:
-        logger.exception("Failed to extract radon raw metrics of file      {}."
+        logger.exception("Failed to extract radon_raw metrics of file      {}."
                      .format(index))
         return [np.nan]*7
 
@@ -220,11 +225,11 @@ def try_radon_cc(series, index, logger):
     Output: list of blocks, which are either function, class, or method"""
     try:
         result = radon.complexity.cc_visit(series[index])
-        logger.debug("Successfully extracted radon cyclometric complexity metrics of file {}."
+        logger.debug("Successfully extracted radon_cc metrics of file {}."
                      .format(index))
         return result
     except Exception:
-        logger.exception("Failed to extract radon cyclometric complexity metrics of file      {}."
+        logger.exception("Failed to extract radon_cc metrics of file      {}."
                          .format(index))
         return ''
 
@@ -236,11 +241,11 @@ def try_radon_h(series, index, logger):
             calculated_length, volume, difficulty, effort, time, bugs]"""
     try:
         result = radon.metrics.h_visit(series[index])
-        logger.debug("Successfully extracted radon halstead metrics of file {}."
+        logger.debug("Successfully extracted radon_h metrics of file {}."
                      .format(index))
         return list(result)
     except Exception:
-        logger.exception("Failed to extract radon halstead metrics of file      {}."
+        logger.exception("Failed to extract radon_h metrics of file      {}."
                          .format(index))
         return [np.nan]*12
 
@@ -251,11 +256,11 @@ def try_radon_mi(series, index, logger):
     Output: maintainability index metric"""
     try:
         result = radon.metrics.mi_visit(series[index], True)
-        logger.debug("Successfully extracted radon maintainability index metric of file {}."
+        logger.debug("Successfully extracted radon_mi metric of file {}."
                      .format(index))
         return result
     except Exception:
-        logger.exception("Failed to extract radon maintainability index metric of file      {}."
+        logger.exception("Failed to extract radon_mi metric of file      {}."
                          .format(index))
         return np.nan
 
@@ -276,8 +281,10 @@ def try_pylint(df, index, logger):
     # pylint-and-subprocess-run-returning-exit-status-28
     except subprocess.CalledProcessError as e:
         stdout = e.output.decode('utf-8')
-        logger.debug("Successfully extracted pylint metrics of file {} (with non-zero exit status: {})."
-                     .format(index, e.returncode))
+        logger.debug("Successfully extracted pylint metrics of file {}."
+                     .format(index))
+        logger.debug("(with non-zero exit status: {})."
+                     .format(e.returncode))
     except Exception:
         logger.exception("Failed to extract pylint metrics of file      {}."
                      .format(index))

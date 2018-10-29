@@ -5,11 +5,7 @@ import os, shutil, argparse
 
 def main(repos_path, interim_path, processed_path, logs_path, models_path):
     
-    """Resets project for clean re-run.
-    
-    Deletes all downloaded repsitories in <repos_path>.
-    Also, deletes all '.log' files in folder <logs_path>.
-    """
+    """Resets project for clean re-run."""
     
     # normalize path
     repos_path = os.path.normpath(repos_path)
@@ -55,13 +51,11 @@ if __name__ == '__main__':
     parser.add_argument(
             '--interim_path',
             default = "data/interim",
-            help = "path to interim data: tabled_df, extracted_df, aggregated_df \
-                    (default: data/interim)")
+            help = "path to interim data (default: data/interim)")
     parser.add_argument(
             '--processed_path',
             default = "data/processed",
-            help = "path to processed data: cleaned_df, selected_df \
-                    (default: data/processed)")
+            help = "path to processed data (default: data/processed)")
     parser.add_argument(
             '--logs_path',
             default = "logs",
@@ -69,8 +63,7 @@ if __name__ == '__main__':
     parser.add_argument(
             '--models_path',
             default = "models",
-            help = "path to the trained models \
-                    (default: models)")
+            help = "path to the trained models (default: models)")
     args = parser.parse_args()
     
     # run main

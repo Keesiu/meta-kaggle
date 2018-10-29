@@ -43,7 +43,8 @@ In order to create a suitable environment with the correct dependencies, use the
 Follow these steps to reproduce the results. Execute the respective scripts from the console.
 
 **IMPORTANT**: Stay in top-level folder `meta-kaggle`, since most scripts need this working directory as a reference path in order to find other files properly.
-As an option, you can execute Step #1 - Step #11 alltogether by executing runall.py: `python src/runall.py`.
+
+**OPTIONAL:** You can execute Step #1 - Step #11 alltogether by executing runall.py: `python src/runall.py`.
 
 ### Optional: Reset whole repository to start from downloading all files.
 #### Step #0: `python src/reset.py`

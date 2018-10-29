@@ -17,7 +17,8 @@ def main(processed_path = "data/processed"):
         <df_name> = name of DataFrame
     Output:
         Saves PCA-transformed data '<df_name>_pca_df.pkl' to <processed_path>
-        and a DataFrame '<df_name>_pca_components_df.pkl' to <processed_path>"""
+        and a DataFrame '<df_name>_pca_components_df.pkl' to <processed_path>
+    """
     
     # logging
     logger = logging.getLogger(__name__)
@@ -28,7 +29,8 @@ def main(processed_path = "data/processed"):
                  .format(processed_path))
     
     # load selected_df
-    selected_df = pd.read_pickle(os.path.join(processed_path, 'selected_df.pkl'))
+    selected_df = pd.read_pickle(os.path.join(processed_path,
+                                              'selected_df.pkl'))
     logger.info("Loaded selected_df. Shape: {}"
                 .format(selected_df.shape))
     
@@ -75,7 +77,7 @@ def main(processed_path = "data/processed"):
     X = pd.DataFrame(pca.transform(X.values),
                      index = X_index)
     logger.info("After PCA:\n{}".format(X.describe()))
-    logger.info("{} principal components explain {:05.2f}% of the total variance."
+    logger.info("{} principal components explain {:05.2f}% of total variance."
                 .format(N_COMPONENTS, sum(pca.explained_variance_ratio_)*100))
     
     pca_df = pd.concat([y, X], axis=1)
@@ -87,7 +89,8 @@ def main(processed_path = "data/processed"):
     
     #%% export pca_components_df as pickle file to processed folder
     logger.info("Components:\n{}".format(pca_components_df))
-    pca_components_df.to_pickle(os.path.join(processed_path, 'pca_components_df.pkl'))
+    pca_components_df.to_pickle(os.path.join(processed_path,
+                                             'pca_components_df.pkl'))
     logger.info("Saved pca_components_df to {}."
             .format(os.path.join(processed_path, 'pca_components_df.pkl')))
     

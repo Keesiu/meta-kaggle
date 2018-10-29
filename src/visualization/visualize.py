@@ -3,7 +3,6 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import pearsonr
-from sklearn.feature_selection import f_regression, SelectKBest
 
 sns.set_context('paper')
 

@@ -31,8 +31,8 @@ def main(processed_path = "data/processed"):
 #    cleaned_df = cleaned_df.loc[cleaned_df.CompetitionId == counter.most_common(1)[0][0]]
     
     teams_df = cleaned_df.iloc[:, :9]
-    y = cleaned_df.iloc[:, 9:11]
-    X = cleaned_df.iloc[:, 11:]
+    y = cleaned_df.iloc[:, 9:10]
+    X = cleaned_df.iloc[:, 10:]
     n = len(X)
     start = time()
     

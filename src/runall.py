@@ -83,12 +83,11 @@ def main(metadata_path, repos_path, interim_path, processed_path, models_path):
 #            logging.info("Finished pca.py, created pca_df.pkl.")
     
     # trains the elastic net regression on all possible combinations
-    for y_name in ['ranking_log', 'score']:
-        if not os.path.isfile(os.path.join(
-                models_path, y_name + '_sm_OLS_fit_regularized_summary.txt')):
-            logging.info("Starting train.py for y_name='{}'.".format(y_name))
-            train.main(processed_path, models_path, y_name)
-            logging.info("Finished train.py for y_name='{}'.".format(y_name))
+    if not os.path.isfile(os.path.join(
+            models_path, 'sm_OLS_fit_regularized_summary.txt')):
+        logging.info("Starting train.py.")
+        train.main(processed_path, models_path)
+        logging.info("Finished train.py.")
 
 if __name__ == '__main__':
     

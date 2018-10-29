@@ -14,8 +14,7 @@ import pickle
 from sklearn.preprocessing import StandardScaler
 
 def main(processed_path = "data/processed",
-         models_path = "models",
-         y_name = 'score'):
+         models_path = "models"):
     
     """Nested 10-fold cross-validation for linear regression of
     ranking_log and score with with lasso regularization
@@ -33,20 +32,17 @@ def main(processed_path = "data/processed",
                  .format(models_path))
     
     # load selected_df
-    selected_df = pd.read_pickle(os.path.join(processed_path, 'selected_df.pkl'))
+    selected_df = pd.read_pickle(os.path.join(processed_path,
+                                              'selected_df.pkl'))
     logger.info("Loaded selected_df. Shape of df: {}"
                 .format(selected_df.shape))
     
     # split df into dependent and independent variables
     teams_df = selected_df.iloc[:, :9]
-    y = selected_df.iloc[:, 9:11]
-    X = selected_df.iloc[:, 11:]
+    y = selected_df.iloc[:, 9:10]
+    X = selected_df.iloc[:, 10:]
     X_columns = X.columns
     X_index = X.index
-    
-    # set y to either ranking_log or score
-    y = y[y_name]
-    logger.info("Set y to '{}'.".format(y_name))
     
     #%% standardize
     
@@ -69,7 +65,7 @@ def main(processed_path = "data/processed",
     
     start = time()
 
-#    # define list of 100 alphas to test: from 1 logarithmically decreasing to 0
+#    # define 100 alphas to test: from 1 logarithmically decreasing to 0
 #    BASE = 1 + 1/5
 #    logger.debug("Constant BASE is set to {}.".format(BASE))
 #    ALPHAS = [BASE**(-x) for x in range(100)]
@@ -96,9 +92,10 @@ def main(processed_path = "data/processed",
     RS = 1
     SELECTION = 'cyclic'
     
-    logger.info("l1_ratio={}, eps={}, n_alphas={}, alphas={}, normalize={}, max_iter={}, tol={}, cv={}, n_jobs={}, random_state={}, selection={}"
-                 .format(L1_RATIOS, EPS, N_ALPHAS, ALPHAS, NORMALIZE,
-                         MAX_ITER, TOL, CV, N_JOBS, RS, SELECTION))
+    logger.info("l1_ratio={}, eps={}, n_alphas={}, alphas={}, normalize={}"
+                 .format(L1_RATIOS, EPS, N_ALPHAS, ALPHAS, NORMALIZE))
+    logger.info("max_iter={}, tol={}, cv={}, n_jobs={}, rs={}, selection={}"
+                 .format(MAX_ITER, TOL, CV, N_JOBS, RS, SELECTION))
     logger.debug("Try following L1-ratios: {}".format(L1_RATIOS))
     
     # print R^2 values for bounding alphas 0 and 1 to make sense of alphas
@@ -172,8 +169,9 @@ def main(processed_path = "data/processed",
                            L1_wt=best_l1_ratio,
                            refit=True)
     res = mod_sm.summary().as_text()
-    logger.info("ElasticNet regression (from sm) of selected_df with respect to '{}' with alpha={:.5f} and L1_wt={}:\n{}"
-                .format(y_name, best_alpha, best_l1_ratio, res))
+    logger.info("ElasticNet regression of selected_df regarding ranking_log")
+    logger.info("with alpha={:.5f} and L1_wt={}:\n{}"
+                .format(best_alpha, best_l1_ratio, res))
     
     # Normality of residuals
     # Jarque-Bera test:
@@ -211,19 +209,24 @@ def main(processed_path = "data/processed",
     #%% export results as pickle file to models folder
     
     # pickle mod
-    with open(os.path.join(models_path, y_name+'_sklearn_ElasticNetCV.pkl'), 'wb') as handle:
+    with open(os.path.join(models_path, 'sklearn_ElasticNetCV.pkl'),
+              'wb') as handle:
         pickle.dump(mod, handle, protocol=pickle.HIGHEST_PROTOCOL)
     logger.info("Saved elastic net model of sklearn to {}."
-                .format(os.path.join(models_path, y_name+'_sklearn_ElasticNetCV.pkl')))
+                .format(os.path.join(models_path,
+                                     'sklearn_ElasticNetCV.pkl')))
     
     # pickle mod_sm
-    with open(os.path.join(models_path, y_name+'_sm_OLS_fit_regularized.pkl'), 'wb') as handle:
+    with open(os.path.join(models_path, 'sm_OLS_fit_regularized.pkl'),
+              'wb') as handle:
         pickle.dump(mod_sm, handle, protocol=pickle.HIGHEST_PROTOCOL)
     logger.info("Saved elastic net model of statsmodels to {}."
-                .format(os.path.join(models_path, y_name+'_sm_OLS_fit_regularized.pkl')))
+                .format(os.path.join(models_path,
+                                     'sm_OLS_fit_regularized.pkl')))
     
     # save res as .txt
-    f = open(os.path.join(models_path, y_name+'_sm_OLS_fit_regularized_summary.txt'), "w+")
+    f = open(os.path.join(models_path,
+                          'sm_OLS_fit_regularized_summary.txt'), "w+")
     f.write(res)
     f.close()
     
@@ -231,8 +234,8 @@ def main(processed_path = "data/processed",
     #%% logging time passed
     end = time()
     time_passed = pd.Timedelta(seconds=end-start).round(freq='s')
-    logger.info("Time needed to train Elastic Net Model on selected_df with respect to '{}': {}"
-                .format(y_name, time_passed))
+    logger.info("Time needed to train Elastic Net Model: {}"
+                .format(time_passed))
     
 #%%
 if __name__ == '__main__':
@@ -257,13 +260,7 @@ if __name__ == '__main__':
             default = "models",
             help = "path to save the trained models \
                     (default: models)")
-    parser.add_argument(
-            '--y_name',
-            default = 'score',
-            help = "name of dependent variable to be trained on \
-                    either 'ranking_log' or 'score' \
-                    (default: score)")
     args = parser.parse_args()
     
     # run main
-    main(args.processed_path, args.models_path, args.y_name)
+    main(args.processed_path, args.models_path)

@@ -33,6 +33,7 @@ The cloned repository has the following basic structure:
     └───__pycache__
 ```
 ### Create a suitable environment
+In order to create a suitable environment with the correct dependencies, use the yaml-file `environment.yaml`. I recommend using Anaconda as an envrionment manager. There, simply use `conda env create -f environment.yaml` to copy my setup (see: https://conda.io/docs/user-guide/tasks/manage-environments.html#creating-an-environment-from-an-environment-yml-file). Afterwards, activate it with `activate meta-kaggle`.
 
 ## Reproduce the results
 Follow these steps to reproduce the results. Execute the respective scripts from the console.

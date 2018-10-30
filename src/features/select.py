@@ -3,8 +3,6 @@
 import os, logging, argparse
 import pandas as pd
 from time import time
-from statsmodels.stats.outliers_influence import variance_inflation_factor
-from collections import Counter
 
 
 def main(processed_path = "data/processed"):
@@ -25,11 +23,7 @@ def main(processed_path = "data/processed"):
                 .format(cleaned_df.shape))
     
     #%% split df into dependent and independent variables
-    
-#    # optionally select subset by CompetitionId
-#    counter = Counter(cleaned_df.CompetitionId)
-#    cleaned_df = cleaned_df.loc[cleaned_df.CompetitionId == counter.most_common(1)[0][0]]
-    
+        
     teams_df = cleaned_df.iloc[:, :9]
     y = cleaned_df.iloc[:, 9:10]
     X = cleaned_df.iloc[:, 10:]
@@ -132,38 +126,6 @@ def main(processed_path = "data/processed"):
                        .format([d for d in dropped
                                 if d not in pylint_rest and
                                 'uses_module' not in d]))
-    
-    #%% multivariate feature selection
-    
-#    # define recursive dropping function
-#    def drop_max_vif(X, logger, steps=-1, vif_max=10):
-#        """Recursively drops feature with highest VIF, until all VIFs < 10
-#        or if <steps> > 0 defined: at most <steps> drops."""
-#        vif = pd.Series(data = [variance_inflation_factor(X.values, i)
-#                                for i in range(X.shape[1])],
-#                        index = X.columns)
-#        if vif.max() < vif_max or steps == 0:
-#            return X
-#        else:
-#            drop = vif.idxmax()
-#            if drop not in pylint_rest:
-#                logger.warning("Dropped {} (VIF = {}).".format(drop, vif[drop]))
-#            else:
-#                logger.info("Dropped {} (VIF = {}).".format(drop, vif[drop]))
-#            return drop_max_vif(X.drop(columns=drop), logger, steps-1, vif_max)
-#    
-#    # remove multi-collinearity through VIF
-#    logger.info("Start dropping features with high VIF.")
-#    n_old = X.shape[1]
-#    X = drop_max_vif(X, logger, steps=-1, vif_max=15)
-#    n_new = X.shape[1]
-#    vif = pd.Series(data = [variance_inflation_factor(X.values, i)
-#                            for i in range(X.shape[1])],
-#                    index = X.columns)
-#    logger.info("Dropped {} features with VIF > 10".format(n_old-n_new))
-#    logger.info("Remaining {} features are:\n".format(len(vif))
-#                + '\n'.join([' '*56 + '{:<50} {}'.format(x, y) 
-#                            for (x, y) in zip(vif.index, vif)]))
     
      #%% concat teams_df, y and X to selected_df
     

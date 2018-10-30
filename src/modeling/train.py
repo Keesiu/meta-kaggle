@@ -37,7 +37,7 @@ def main(processed_path = "data/processed",
     logger.info("Loaded selected_df. Shape of df: {}"
                 .format(selected_df.shape))
     
-    # split df into dependent and independent variables
+    #%% split df into dependent and independent variables
     teams_df = selected_df.iloc[:, :9]
     y = selected_df.iloc[:, 9:10]
     X = selected_df.iloc[:, 10:]
@@ -65,17 +65,6 @@ def main(processed_path = "data/processed",
     
     start = time()
 
-#    # define 100 alphas to test: from 1 logarithmically decreasing to 0
-#    BASE = 1 + 1/5
-#    logger.debug("Constant BASE is set to {}.".format(BASE))
-#    ALPHAS = [BASE**(-x) for x in range(100)]
-#    ALPHAS = np.logspace(0.00001, 1, num=50, base=10.0)
-#    n_samples = len(y)
-#    alpha_max = (np.sqrt(np.sum(Xy ** 2, axis=1)).max() /
-#                 (n_samples * l1_ratio))
-#    np.logspace(np.log10(alpha_max * eps), np.log10(alpha_max),
-#                       num=n_alphas)[::-1]
-#    logger.debug("Alphas set to {}".format(ALPHAS))
     L1_RATIOS = [1.0, .95, .7, .5, .3, .1]
     EPS = 0.001
     N_ALPHAS = 100
@@ -198,13 +187,6 @@ def main(processed_path = "data/processed",
     name = ['F statistic', 'p-value']
     test = sms.het_goldfeldquandt(mod_sm.resid, mod_sm.model.exog)
     logger.info("Goldfeld-Quandt test: {}".format(lzip(name, test)))
-    
-#    # Linearity (commented out because function broken)
-#    # Harvey-Collier multiplier test for Null hypothesis that
-#    # the linear specification is correct:
-#    name = ['t value', 'p value']
-#    test = sms.linear_harvey_collier(mod_sm)
-#    lzip(name, test)
     
     #%% export results as pickle file to models folder
     

@@ -142,7 +142,7 @@ Deletes all downloaded repositories, log-files, pickled interim and processed da
 
 ### SHORT WAY: Run everything automatically
 #### Step #1-10: `python src/runall.py`
-Runs all the steps described in the following. Automatically skips unneccessary steps.
+Runs all the steps described in the following. Automatically skips steps already done.
 
 ### LONG WAY: Run every script manually step-by-step
 
@@ -168,8 +168,8 @@ Select desired features for modeling, based on theory and hypotheses.
 
 ### Modelling
 #### Step #9: `python src/models/train.py`
-Trains the models.
+Trains the ElasticNet models with scikit-learn and statsmodels.
 
 ### Visualization
 #### Step #10: `python src/visualization/visualize.py`
-Produces some visualizations.
+Creates some visualizations.

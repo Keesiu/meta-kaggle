@@ -9,29 +9,108 @@ Analysis of Kaggle Meta Data 2016 for my Master's Thesis "*Artificial Intelligen
 In your console, navigate to a folder where you want to save the repository. Clone the whole "meta-kaggle" repository with `git clone https://github.com/Keesiu/meta-kaggle.git`.
 
 ### Repository structure
-**WIP**
 The cloned repository has the following basic structure:
 ```
-├───data
-│   ├───external
-│   │   ├───repositories
-│   │   └───repositories_2to3
-│   ├───interim
-│   ├───processed
-│   └───raw
-│       ├───kaggle-survey-2017
-│       └───meta-kaggle-2016
-├───logs
-├───models
-└───src
-    ├───data
-    │   └───__pycache__
-    ├───features
-    │   └───__pycache__
-    ├───models
-    │   └───__pycache__
-    ├───visualization
-    └───__pycache__
+└───meta-kaggle                             <- IMPORTANT: must be current working directory
+    │   .gitignore                          <- gitignore-file in order to only upload small data
+    │   environment.yaml                    <- yaml-file to reproduce suitable environment
+    │   LICENSE
+    │   README.md                           <- markdown-file on how to use this repository
+    │
+    ├───data                                <- where all data is stored
+    │   ├───external                        <- data from third party sources
+    │   │   │   .gitkeep                    <- makes Github to keep this empty folder
+    │   │   │
+    │   │   ├───repositories                <- downloaded external repositories
+    │   │   │   ├───<Id_1>                  <- respective Id from Teams.csv
+    │   │   │   │   └───<Repository_name_1> <- name of downloaded repository
+    │   │   │   │       └───...             <- individual content of this repository
+    │   │   │   │
+    │   │   │   ├───<Id_2>
+    │   │   │   │   └───<Repository_name_2>
+    │   │   │   │       └───...
+    │   │   │   │
+    │   │   │   ...
+    │   │   │
+    │   │   └───repositories_2to3           <- translated external repositories
+    │   │       ├───<Id_1>
+    │   │       │   └───<Repository_name_1>
+    │   │       │       └───...
+    │   │       │
+    │   │       ├───<Id_2>
+    │   │       │   └───<Repository_name_2>
+    │   │       │       └───...
+    │   │       │
+    │   │       ...
+    │   │
+    │   ├───interim                         <- intermediate data that has been transformed
+    │   │       .gitkeep
+    │   │
+    │   ├───processed                       <- the final data sets for feature selection and modeling
+    │   │       .gitkeep
+    │   │
+    │   └───raw                             <- The original, immutable raw data
+    │       │   .gitkeep
+    │       │
+    │       └───meta-kaggle-2016            <- IMPORTANT: needs to be inserted manually
+    │               CompetitionHostSegments.csv
+    │               Competitions.csv
+    │               Datasets.csv
+    │               DatasetVersions.csv
+    │               EvaluationAlgorithms.csv
+    │               ForumMessages.csv
+    │               Forums.csv
+    │               ForumTopics.csv
+    │               hashes.txt
+    │               RewardTypes.csv
+    │               ScriptLanguages.csv
+    │               ScriptProjects.csv
+    │               ScriptRunOutputFileExtensions.csv
+    │               ScriptRunOutputFileGroups.csv
+    │               ScriptRunOutputFiles.csv
+    │               ScriptRuns.csv
+    │               Scripts.csv
+    │               ScriptVersions.csv
+    │               ScriptVotes.csv
+    │               Sites.csv
+    │               Submissions.csv
+    │               TeamMemberships.csv
+    │               Teams.csv               <- most important file, includes Ranking and GithubRepolink
+    │               Users.csv
+    │               ValidationSets.csv
+    │
+    ├───logs                                <- log-files of all scripts that run
+    │       .gitkeep
+    │
+    ├───models                              <- trained and serialized models and model summaries
+    │       .gitkeep
+    │
+    └───src                                 <- Source code to use in this project
+        │   reset.py
+        │   runall.py
+        │   __init__.py                     <- makes src a Python module
+        │
+        ├───data                            <- scripts for data collection and preparation
+        │       download.py
+        │       reduce.py
+        │       table.py
+        │       translate2to3.py
+        │       __init__.py
+        │
+        ├───features                        <- scripts for feature engineering and selection
+        │       aggregate.py
+        │       clean.py
+        │       extract.py
+        │       select.py
+        │       __init__.py
+        │
+        ├───models                          <- scripts to train models
+        │       train.py
+        │       __init__.py
+        │
+        └───visualization                   <- scripts to create visualizations
+                visualize.py
+                __init__.py
 ```
 
 ### Include raw data "meta-kaggle-2016"

@@ -57,7 +57,7 @@ Follow these steps to reproduce the results. Execute the respective scripts from
 Deletes all downloaded repositories, log-files, pickled interim and processed data, models and visualizations for a clean start from the very beginning. Note, that you especially need to download all external repositories again afterwards.
 
 ### SHORT WAY: Run everything automatically
-#### Step #1-11: `python src/runall.py`
+#### Step #1-10: `python src/runall.py`
 Runs all the steps described in the following. Automatically skips unneccessary steps.
 
 ### LONG WAY: Run every script manually step-by-step
@@ -81,15 +81,13 @@ Aggregates all features from script-level to repository-level.
 Cleans the data by final feature engineering and outlier removement.
 #### Step #8: `python src/features/select.py`
 Select desired features for modeling, based on theory and hypotheses.
-#### Step #9: `python src/features/pca.py`
-Optional: Performs PCA on data and show structure of main components.
 
 ### Modelling
-#### Step #10: `python src/models/train.py`
+#### Step #9: `python src/models/train.py`
 Trains the models.
 
 ### Visualization
-#### Step #11: `python src/visualization/visualize.py`
+#### Step #10: `python src/visualization/visualize.py`
 Produces some visualizations.
 
 ## Results

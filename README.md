@@ -112,7 +112,7 @@ The cloned repository has the following basic structure:
     |           visualize.py
     |           __init__.py
     |
-    └───visualizations
+    └───visualizations                      <- where all visualizations are stored
             .gitkeep
 ```
 

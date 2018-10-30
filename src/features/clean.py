@@ -188,14 +188,9 @@ def main(interim_path = "data/interim",
                 .format(X.shape))
     
     # drop repos with outliers
-#    desc = X.describe().T
-#    top = (desc['max'] - desc['50%']) / desc['std']
-#    bottom = (desc['50%']-desc['min']) / desc['std']
-#    desc.loc[top>5]
-#    desc.loc[bottom>3]
-#    X = X[X.score <= 1] # 16
-#    logger.info("Dropped rows with score > 1. Shape: {}"
-#                .format(X.shape))
+    X = X[pd.to_numeric(aggregated_df.Score) <= 1] # 16
+    logger.info("Dropped rows with score > 1. Shape: {}"
+                .format(X.shape))
     X = X[(4 <= X.loc_max_log) & (X.loc_max_log <= 10)] # 2
     logger.info("Dropped rows with lines of code > 10.000. Shape: {}"
                 .format(X.shape))

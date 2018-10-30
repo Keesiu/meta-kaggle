@@ -85,32 +85,35 @@ The cloned repository has the following basic structure:
     ├───models                              <- trained and serialized models and model summaries
     │       .gitkeep
     │
-    └───src                                 <- Source code to use in this project
-        │   reset.py
-        │   runall.py
-        │   __init__.py                     <- makes src a Python module
-        │
-        ├───data                            <- scripts for data collection and preparation
-        │       download.py
-        │       reduce.py
-        │       table.py
-        │       translate2to3.py
-        │       __init__.py
-        │
-        ├───features                        <- scripts for feature engineering and selection
-        │       aggregate.py
-        │       clean.py
-        │       extract.py
-        │       select.py
-        │       __init__.py
-        │
-        ├───models                          <- scripts to train models
-        │       train.py
-        │       __init__.py
-        │
-        └───visualization                   <- scripts to create visualizations
-                visualize.py
-                __init__.py
+    ├───src                                 <- Source code to use in this project
+    |   │   reset.py
+    |   │   runall.py
+    |   │   __init__.py                     <- makes src a Python module
+    |   │
+    |   ├───data                            <- scripts for data collection and preparation
+    |   │       download.py
+    |   │       reduce.py
+    |   │       table.py
+    |   │       translate2to3.py
+    |   │       __init__.py
+    |   │
+    |   ├───features                        <- scripts for feature engineering and selection
+    |   │       aggregate.py
+    |   │       clean.py
+    |   │       extract.py
+    |   │       select.py
+    |   │       __init__.py
+    |   │
+    |   ├───modeling                        <- scripts to train models
+    |   │       train.py
+    |   │       __init__.py
+    |   │
+    |   └───visualization                   <- scripts to create visualizations
+    |           visualize.py
+    |           __init__.py
+    |
+    └───visualizations                      <- where all visualizations are stored
+            .gitkeep
 ```
 
 ### Include raw data "meta-kaggle-2016"
@@ -139,7 +142,7 @@ Deletes all downloaded repositories, log-files, pickled interim and processed da
 
 ### SHORT WAY: Run everything automatically
 #### Step #1-10: `python src/runall.py`
-Runs all the steps described in the following. Automatically skips unneccessary steps.
+Runs all the steps described in the following. Automatically skips steps already done.
 
 ### LONG WAY: Run every script manually step-by-step
 
@@ -165,8 +168,8 @@ Select desired features for modeling, based on theory and hypotheses.
 
 ### Modelling
 #### Step #9: `python src/models/train.py`
-Trains the models.
+Trains the ElasticNet models with scikit-learn and statsmodels.
 
 ### Visualization
 #### Step #10: `python src/visualization/visualize.py`
-Produces some visualizations.
+Creates some visualizations.

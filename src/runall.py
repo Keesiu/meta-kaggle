@@ -9,8 +9,8 @@ if '' not in sys.path:
     sys.path.insert(0, '')
 
 from src.data import download, reduce, translate2to3, table
-from src.features import extract, aggregate, clean, select, pca
-from src.models import train
+from src.features import extract, aggregate, clean, select
+from src.modelling import train
 
 def main(metadata_path, repos_path, interim_path, processed_path, models_path):
     

@@ -114,7 +114,9 @@ The cloned repository has the following basic structure:
 ```
 
 ### Include raw data "meta-kaggle-2016"
-The raw data is essentially the kaggle meta data from 2016. Its data set "meta-kaggle-2016" needs to be placed into the folder `data/raw'. Note, that this kaggle dataset is not available on Kaggle's webpage anymore, since a newer version (Meta Kaggle 2.0) was published (see: https://www.kaggle.com/kaggle/meta-kaggle/data).
+The raw data is essentially the kaggle meta data from 2016. Its data set "meta-kaggle-2016" needs to be placed into the folder `data/raw'.
+
+> **NOTE**: This kaggle dataset is not available on Kaggle's webpage anymore, since a newer version (Meta Kaggle 2.0) was published (see: https://www.kaggle.com/kaggle/meta-kaggle/data).
 
 ### Create a suitable environment
 In order to create a suitable environment with the correct dependencies, use the yaml-file `environment.yaml`. I recommend using Anaconda as an environment manager. There, simply use `conda env create -f environment.yaml` to copy my setup (see: https://conda.io/docs/user-guide/tasks/manage-environments.html#creating-an-environment-from-an-environment-yml-file).
@@ -127,9 +129,9 @@ Afterwards, activate it with `activate meta-kaggle`.
 
 Follow these steps to reproduce the results. Execute the respective scripts from the console.
 
-**IMPORTANT**: Stay in top-level folder `meta-kaggle`, since most scripts need this working directory as a reference path in order to find other files properly.
+> **IMPORTANT**: Stay in top-level folder `meta-kaggle`, since most scripts need this working directory as a reference path in order to find other files properly.
 
-**NOTE:** You can execute Step #1 - Step #11 alltogether by executing runall.py: `python src/runall.py`.
+> **NOTE:** You can execute Step #1 - Step #10 alltogether by executing runall.py: `python src/runall.py`.
 
 ### OPTIONAL: Reset whole repository
 #### Step #0: `python src/reset.py`
@@ -168,7 +170,3 @@ Trains the models.
 ### Visualization
 #### Step #10: `python src/visualization/visualize.py`
 Produces some visualizations.
-
-## Results
-
-## Further readings

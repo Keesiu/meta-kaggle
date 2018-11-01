@@ -1,78 +1,146 @@
 # -*- coding: utf-8 -*-
 
+import os, logging, argparse
+import pandas as pd
+import numpy as np
+from time import time
+import pickle
 import matplotlib.pyplot as plt
+from matplotlib import rcParams
 import seaborn as sns
-from scipy.stats import pearsonr
+from sklearn.preprocessing import StandardScaler
 
-sns.set_context('paper')
+def main(processed_path = "data/processed",
+         models_path = "models",
+         visualizations_path = "visualizations"):
+    
+    """Creates visualizations."""
+    
+    # logging
+    logger = logging.getLogger(__name__)
+    
+    # normalize paths
+    processed_path = os.path.normpath(processed_path)
+    logger.debug("Path to processed data normalized: {}"
+                 .format(processed_path))
+    models_path = os.path.normpath(models_path)
+    logger.debug("Path to models normalized: {}"
+                 .format(models_path))
+    visualizations_path = os.path.normpath(visualizations_path)
+    logger.debug("Path to visualizations normalized: {}"
+                 .format(visualizations_path))
+    
+    #%% load selected_df
+    selected_df = pd.read_pickle(os.path.join(processed_path,
+                                              'selected_df.pkl'))
+    logger.info("Loaded selected_df. Shape of df: {}"
+                .format(selected_df.shape))
+    
+    # load models
+    mod = pickle.load(open(
+            os.path.join(models_path, 'sklearn_ElasticNetCV.pkl'), 'rb'))
+    mod_sm = pickle.load(open(
+            os.path.join(models_path, 'sm_OLS_fit_regularized.pkl'), 'rb'))
 
-# score and ranking
-sns.scatterplot(x=y.ranking_log, y=y.score)
+    #%% split selected_df into dependent and independent variables
+    teams_df = selected_df.iloc[:, :9]
+    y = selected_df.iloc[:, 9:10]
+    X = selected_df.iloc[:, 10:]
+    yX = pd.concat([y, X], axis=1)
+    
+    #%% start visualization
+    
+    start = time()
+    sns.set_context('paper')
+    rcParams.update({'figure.autolayout': True})
+    
+    #%% correlation coefficient matrix
+    
+    corr = yX.corr()
+    # Generate a mask for the upper triangle
+    mask = np.zeros_like(corr, dtype=np.bool)
+    mask[np.triu_indices_from(mask)] = True
+    # Set up the matplotlib figure
+    f, ax = plt.subplots(figsize=(10, 10))
+    # Generate a custom diverging colormap
+    cmap = sns.diverging_palette(240, 10, as_cmap=True)
+    # Draw the heatmap with the mask and correct aspect ratio
+    heatmap_corr = sns.heatmap(corr, mask=mask, cmap=cmap, vmin=-1, vmax=1,
+                               center=0, square=True, linewidths=.5,
+                               cbar_kws={"shrink": .5})
+    heatmap_corr.get_figure().savefig(
+            os.path.join(visualizations_path,
+                         'heatmap_corr.png'), dpi=300)
+    #%%
+    heatmap_corr.clear()
+    plt.close()
+    #%% histogram of ranking
+    hist_ranking = sns.distplot(teams_df.Ranking,
+                                rug=True, axlabel = 'ranking')
+    hist_ranking.get_figure().savefig(
+            os.path.join(visualizations_path,
+                         'hist_ranking.png'), dpi=300)
+    #%%
+    hist_ranking.clear()
+    plt.close()
+    #%% histogram of ranking_log
+    hist_ranking_log = sns.distplot(y,
+                                    rug=True, axlabel = 'ranking_log')
+    hist_ranking_log.get_figure().savefig(
+            os.path.join(visualizations_path,
+                         'hist_ranking_log.png'), dpi=300)
+    #%%
+    hist_ranking_log.clear()
+    plt.close()
+    #%% histogram of loc_max
+    hist_loc_max = sns.distplot(np.e**X.loc_max_log,
+                                rug=True, axlabel = 'loc_max')
+    hist_loc_max.get_figure().savefig(
+            os.path.join(visualizations_path,
+                         'hist_loc_max.png'), dpi=300)
+    #%%
+    hist_loc_max.clear()
+    plt.close()
+    #%% histogram of loc_max_log
+    hist_loc_max_log = sns.distplot(X.loc_max_log,
+                                    rug=True, axlabel = 'loc_max_log')
+    hist_loc_max_log.get_figure().savefig(
+            os.path.join(visualizations_path,
+                         'hist_loc_max_log.png'), dpi=300)
+    #%%
+    hist_loc_max_log.clear()
+    plt.close()
+    
+    #%% standardize
+    scaler = StandardScaler()
+    not_standardize = ['core',
+                       'visualization',
+                       'machine_learning',
+                       'deep_learning']
+    X_standardized = scaler.fit_transform(X
+                                          .drop(columns=not_standardize)
+                                          .values)
+    X_standardized = pd.DataFrame(X_standardized,
+                                  index = X.index,
+                                  columns = X.columns.drop(not_standardize))
+    X_not_standardized = X[not_standardize]
+    X = pd.concat([X_standardized, X_not_standardized], axis=1)
+    logger.debug("After Standardization:\n{}".format(X.describe().to_string))
+    # update yX
+    yX = pd.concat([y, X], axis=1)
+    
+    #%% boxplot
+    sns.boxplot(data=yX)
+    
+    # residual plot
+    sns.residplot(x=mod_sm.fittedvalues, y=y, data=X, lowess=True)
+    
+    
+    
+    # plot regression model
+    sns.regplot(x=X.loc_max_log, y=y, data=X)
+    
 
-# histogram
-sns.distplot(y.score, bins=50)
-sns.distplot(y.ranking_log)
-sns.distplot(X.loc_max_log)
-sns.distplot(X.pylint_warning_ratio)
-sns.distplot(X.radon_h_effort_ratio)
-sns.distplot(X.radon_mi_mean)
-sns.distplot(X.pylint_)
-sns.distplot(X.loc_max_log)
-# pairplot
-sns.pairplot(pd.concat([y, X], axis=1))
-
-# boxplot
-sns.boxplot(data=X)
-
-# residual plot
-sns.residplot(x=mod_sm.fittedvalues, y=y, data=X, lowess=True)
-
-# correlation coefficient matrix
-corr = X.corr()
-# Generate a mask for the upper triangle
-mask = np.zeros_like(corr, dtype=np.bool)
-mask[np.triu_indices_from(mask)] = True
-# Set up the matplotlib figure
-f, ax = plt.subplots(figsize=(15, 15))
-# Generate a custom diverging colormap
-cmap = sns.diverging_palette(240, 10, as_cmap=True)
-# Draw the heatmap with the mask and correct aspect ratio
-corr_heatmap = sns.heatmap(corr, mask=mask, cmap=cmap, vmin=-1, vmax=1, center=0,
-            square=True, linewidths=.5, cbar_kws={"shrink": .5})
-#corr_heatmap_fig = corr_heatmap.get_figure()    
-#corr_heatmap_fig.savefig('corr_heatmap_after_vif.png', dpi=100)
-
-# plot regression model
-sns.regplot(x='radon_avg_cc', y=y.score, data=X, logistic=True)
-
-#%% exploratory analysis
-
-# correlation coefficient matrix
-corr = X.corr()
-
-# compute Pearson correlation coefficient and p-value for each pair
-# (not reliable for small datasets)
-corr_score = pd.DataFrame(
-        data = [list(pearsonr(X[x], y.score)) for x in X],
-        index = X.columns,
-        columns = ['corr_coeff', 'p_value'])
-corr_ranking_log = pd.DataFrame(
-        data = [list(pearsonr(X[x], y.ranking_log)) for x in X],
-        index = X.columns,
-        columns = ['corr_coeff', 'p_value'])
-
-# compute f_scores
-f_score, pval = f_regression(X, y.score)    
-f_score_df = pd.DataFrame(
-        data = {'f_score' : f_score,
-                'pval' : pval},
-        index = X.columns)
-f_score, pval = f_regression(X, y.ranking_log)
-f_ranking_log_df = pd.DataFrame(
-        data = {'f_score' : f_score,
-                'pval' : pval},
-        index = X.columns)
-del f_score, pval
 
 #%% plot ElasticNetCV results
 
@@ -94,3 +162,45 @@ del f_score, pval
     plt.axis('tight')
     plt.ylim(ymin, ymax)
     plt.show()
+    
+    #%% pairplot
+    sns.pairplot(yX)
+    
+    #%% logging time passed
+    end = time()
+    time_passed = pd.Timedelta(seconds=end-start).round(freq='s')
+    logger.info("Time needed to create visualizations: {}"
+                .format(time_passed))
+    
+#%%
+
+if __name__ == '__main__':
+
+    # configure logging
+    logging.basicConfig(
+        level = logging.DEBUG,
+        format = "%(asctime)s %(name)-20s %(levelname)-8s %(message)s",
+        filename = "logs/visualize.log",
+        datefmt = "%a, %d %b %Y %H:%M:%S")
+    
+    # parse arguments
+    parser = argparse.ArgumentParser(
+            description = "Create visualizations.")
+    parser.add_argument(
+            '--processed_path',
+            default = "data/processed",
+            help = "path to processed data (default: data/processed)")
+    parser.add_argument(
+            '--models_path',
+            default = "models",
+            help = "path to the trained models (default: models)")
+    parser.add_argument(
+            '--visualizations_path',
+            default = "visualizations",
+            help = "path to the visualizations (default: visualizations)")
+    args = parser.parse_args()
+    
+    # run main
+    main(args.processed_path,
+         args.models_path,
+         args.visualizations_path)

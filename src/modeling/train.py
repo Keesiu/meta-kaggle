@@ -55,8 +55,8 @@ def main(processed_path = "data/processed",
                                           .drop(columns=not_standardize)
                                           .values)
     X_standardized = pd.DataFrame(X_standardized,
-                                  index = X.index,
-                                  columns = X.columns.drop(not_standardize))
+                                  index = X_index,
+                                  columns = X_columns.drop(not_standardize))
     X_not_standardized = X[not_standardize]
     X = pd.concat([X_standardized, X_not_standardized], axis=1)
     logger.debug("After Standardization:\n{}".format(X.describe().to_string))

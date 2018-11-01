@@ -65,53 +65,51 @@ def main(processed_path = "data/processed",
     # Generate a custom diverging colormap
     cmap = sns.diverging_palette(240, 10, as_cmap=True)
     # Draw the heatmap with the mask and correct aspect ratio
-    heatmap_corr = sns.heatmap(corr, mask=mask, cmap=cmap, vmin=-1, vmax=1,
-                               center=0, square=True, linewidths=.5,
-                               cbar_kws={"shrink": .5})
-    heatmap_corr.get_figure().savefig(
-            os.path.join(visualizations_path,
-                         'heatmap_corr.png'), dpi=300)
-    #%%
-    heatmap_corr.clear()
+    fig = sns.heatmap(corr, mask=mask, cmap=cmap, vmin=-1, vmax=1,
+                      center=0, square=True, linewidths=.5,
+                      cbar_kws={"shrink": .5}).get_figure()
+    fig.savefig(os.path.join(visualizations_path,
+                             'correlation_coefficient_matrix.png'), dpi=300)
+    fig.clear()
     plt.close()
-    #%% histogram of ranking
-    hist_ranking = sns.distplot(teams_df.Ranking,
-                                rug=True, axlabel = 'ranking')
-    hist_ranking.get_figure().savefig(
-            os.path.join(visualizations_path,
-                         'hist_ranking.png'), dpi=300)
-    #%%
-    hist_ranking.clear()
+    
+    #%% histograms of transformation
+    
+    sns.set_style("darkgrid")
+    
+    # histogram of ranking
+    fig = sns.distplot(teams_df.Ranking, rug=True,
+                       axlabel='ranking').get_figure()
+    fig.savefig(os.path.join(visualizations_path,
+                             'histogram_ranking.png'), dpi=300)
+    fig.clear()
     plt.close()
-    #%% histogram of ranking_log
-    hist_ranking_log = sns.distplot(y,
-                                    rug=True, axlabel = 'ranking_log')
-    hist_ranking_log.get_figure().savefig(
-            os.path.join(visualizations_path,
-                         'hist_ranking_log.png'), dpi=300)
-    #%%
-    hist_ranking_log.clear()
+    
+    # histogram of ranking_log
+    fig = sns.distplot(y, rug=True, axlabel='ranking_log').get_figure()
+    fig.savefig(os.path.join(visualizations_path,
+                             'histogam_ranking_log.png'), dpi=300)
+    fig.clear()
     plt.close()
-    #%% histogram of loc_max
-    hist_loc_max = sns.distplot(np.e**X.loc_max_log,
-                                rug=True, axlabel = 'loc_max')
-    hist_loc_max.get_figure().savefig(
-            os.path.join(visualizations_path,
-                         'hist_loc_max.png'), dpi=300)
-    #%%
-    hist_loc_max.clear()
+    
+    # histogram of loc_max
+    fig = sns.distplot(np.e**X.loc_max_log, rug=True,
+                       axlabel='loc_max').get_figure()
+    fig.savefig(os.path.join(visualizations_path,
+                             'histogram_loc_max.png'), dpi=300)
+    fig.clear()
     plt.close()
-    #%% histogram of loc_max_log
-    hist_loc_max_log = sns.distplot(X.loc_max_log,
-                                    rug=True, axlabel = 'loc_max_log')
-    hist_loc_max_log.get_figure().savefig(
-            os.path.join(visualizations_path,
-                         'hist_loc_max_log.png'), dpi=300)
-    #%%
-    hist_loc_max_log.clear()
+    
+    # histogram of loc_max_log
+    fig = sns.distplot(X.loc_max_log, rug=True,
+                       axlabel='loc_max_log').get_figure()
+    fig.savefig(os.path.join(visualizations_path,
+                         'histogram_loc_max_log.png'), dpi=300)
+    fig.clear()
     plt.close()
     
     #%% standardize
+    
     scaler = StandardScaler()
     not_standardize = ['core',
                        'visualization',
@@ -130,41 +128,52 @@ def main(processed_path = "data/processed",
     yX = pd.concat([y, X], axis=1)
     
     #%% boxplot
-    sns.boxplot(data=yX)
     
-    # residual plot
-    sns.residplot(x=mod_sm.fittedvalues, y=y, data=X, lowess=True)
+    f, ax = plt.subplots(figsize=(12, 8))
+    fig = sns.boxplot(data=yX)
+    fig.set_xticklabels(fig.get_xticklabels(), rotation=270)
+    fig.get_figure().savefig(os.path.join(visualizations_path,
+                                          'boxplot.png'), dpi=300)
+    fig.clear()
+    plt.close()
     
+    #%% residual plot
+    f, ax = plt.subplots(figsize=(5, 5))
+    fig = sns.residplot(x=mod_sm.fittedvalues, y=y, data=X)
+    fig.get_figure().savefig(
+            os.path.join(visualizations_path,
+                         'residplot.png'), dpi=300)
+    fig.clear()
+    plt.close()
     
-    
-    # plot regression model
-    sns.regplot(x=X.loc_max_log, y=y, data=X)
-    
-
-
-#%% plot ElasticNetCV results
-
-    mse_path = pd.DataFrame(data=mod.mse_path_, index=ALPHAS)
-    logger.info("Lasso MSE = {}.".format(mse_path))
-    # Display results
-    m_log_alphas = -np.log(mod.alphas_)/np.log(BASE)
-    plt.figure(figsize=(10,8))
-    ymin, ymax = 0, 1000
-    plt.plot(m_log_alphas, mod.mse_path_, ':')
-    plt.plot(m_log_alphas, mod.mse_path_.mean(axis=-1), 'k',
-             label='Average across the folds', linewidth=2)
-    plt.axvline(-np.log10(mod.alpha_), linestyle='--', color='k',
-                label='alpha: CV estimate')
-    plt.legend()
-    plt.xlabel('-log(alpha)')
-    plt.ylabel('Mean square error')
-    plt.title('Mean square error on each fold')
-    plt.axis('tight')
-    plt.ylim(ymin, ymax)
-    plt.show()
-    
-    #%% pairplot
-    sns.pairplot(yX)
+    #%% plot regression model
+#    sns.regplot(x=X.loc_max_log, y=y, data=X)
+#    
+#
+#
+##%% plot ElasticNetCV results
+#
+#    mse_path = pd.DataFrame(data=mod.mse_path_, index=ALPHAS)
+#    logger.info("Lasso MSE = {}.".format(mse_path))
+#    # Display results
+#    m_log_alphas = -np.log(mod.alphas_)/np.log(BASE)
+#    plt.figure(figsize=(10,8))
+#    ymin, ymax = 0, 1000
+#    plt.plot(m_log_alphas, mod.mse_path_, ':')
+#    plt.plot(m_log_alphas, mod.mse_path_.mean(axis=-1), 'k',
+#             label='Average across the folds', linewidth=2)
+#    plt.axvline(-np.log10(mod.alpha_), linestyle='--', color='k',
+#                label='alpha: CV estimate')
+#    plt.legend()
+#    plt.xlabel('-log(alpha)')
+#    plt.ylabel('Mean square error')
+#    plt.title('Mean square error on each fold')
+#    plt.axis('tight')
+#    plt.ylim(ymin, ymax)
+#    plt.show()
+#    
+#    #%% pairplot
+#    sns.pairplot(yX)
     
     #%% logging time passed
     end = time()

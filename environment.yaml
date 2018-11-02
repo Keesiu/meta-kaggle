@@ -1,29 +1,37 @@
 name: meta-kaggle
 channels:
+  - districtdatalabs
   - conda-forge
+  - anaconda
   - anaconda-fusion
   - defaults
 dependencies:
-  - ca-certificates=2018.8.24=ha4d7672_0
-  - mando=0.6.4=py_0
+  - ca-certificates=2018.03.07=0
+  - certifi=2018.8.24=py36_1
   - openssl=1.0.2p=hfa6e2cd_0
+  - statsmodels=0.9.0=py36h452e1ab_0
+  - vc=14.1=h21ff451_3
+  - vs2015_runtime=15.5.2=3
+  - zlib=1.2.11=h8395fce_2
+  - mando=0.6.4=py_0
   - pycodestyle=2.3.1=py_1
   - pyflakes=1.6.0=py_1
   - qtconsole=4.4.1=py36_1
   - radon=2.2.0=py_0
-  - zlib=1.2.11=vc14_0
   - alabaster=0.7.11=py36_0
   - asn1crypto=0.24.0=py36_0
   - astroid=2.0.4=py36_0
+  - atomicwrites=1.2.1=py36_0
+  - attrs=18.2.0=py36h28b3542_0
   - babel=2.6.0=py36_0
   - backcall=0.1.0=py36_0
   - blas=1.0=mkl
   - bleach=2.1.4=py36_0
-  - certifi=2018.8.24=py36_1
   - cffi=1.11.5=py36h74b6da3_1
   - chardet=3.0.4=py36_1
   - cloudpickle=0.5.5=py36_0
   - colorama=0.3.9=py36h029ae33_0
+  - coverage=4.5.1=py36hfa6e2cd_0
   - cryptography=2.3.1=py36h74b6da3_0
   - cycler=0.10.0=py36h009560c_0
   - decorator=4.3.0=py36_0
@@ -60,6 +68,7 @@ dependencies:
   - mkl=2019.0=118
   - mkl_fft=1.0.4=py36h1e22a9b_1
   - mkl_random=1.0.1=py36h77b88f5_1
+  - more-itertools=4.3.0=py36_0
   - nbconvert=5.3.1=py36_0
   - nbformat=4.4.0=py36h3a5bc1b_0
   - numpy=1.15.1=py36ha559c80_0
@@ -73,8 +82,10 @@ dependencies:
   - patsy=0.5.0=py36_0
   - pickleshare=0.7.4=py36h9de030f_0
   - pip=10.0.1=py36_0
+  - pluggy=0.8.0=py36_0
   - prompt_toolkit=1.0.15=py36h60b8f86_0
   - psutil=5.4.7=py36hfa6e2cd_0
+  - py=1.7.0=py36_0
   - pycparser=2.18=py36_1
   - pygments=2.2.0=py36hb010967_0
   - pylint=2.1.1=py36_0
@@ -82,6 +93,9 @@ dependencies:
   - pyparsing=2.2.0=py36_1
   - pyqt=5.9.2=py36h6538335_2
   - pysocks=1.6.8=py36_0
+  - pytest=3.9.3=py36_0
+  - pytest-cov=2.6.0=py36_0
+  - pytest-runner=4.2=py36_0
   - python=3.6.6=hea74fb7_0
   - python-dateutil=2.7.3=py36_0
   - pytz=2018.5=py36_0
@@ -106,14 +120,11 @@ dependencies:
   - spyder=3.3.1=py36_1
   - spyder-kernels=0.2.6=py36_0
   - sqlite=3.24.0=h7602738_0
-  - statsmodels=0.9.0=py36h452e1ab_0
   - testpath=0.3.1=py36h2698cfe_0
   - tornado=5.1=py36hfa6e2cd_0
   - traitlets=4.3.2=py36h096827d_0
   - typed-ast=1.1.0=py36hfa6e2cd_0
   - urllib3=1.23=py36_0
-  - vc=14.1=h0510ff6_4
-  - vs2015_runtime=14.15.26706=h3a45250_0
   - wcwidth=0.1.7=py36h3d5aa90_0
   - webencodings=0.5.1=py36_1
   - wheel=0.31.1=py36_0
@@ -121,5 +132,6 @@ dependencies:
   - wincertstore=0.2=py36h7fe50ca_0
   - wrapt=1.10.11=py36hfa6e2cd_2
   - zeromq=4.2.5=he025d50_1
+  - yellowbrick=0.8=py36_0
 prefix: C:\Users\keesi\Anaconda3\envs\meta-kaggle
 

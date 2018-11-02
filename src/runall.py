@@ -11,8 +11,14 @@ if '' not in sys.path:
 from src.data import download, reduce, translate2to3, table
 from src.features import extract, aggregate, clean, select
 from src.modeling import train
+from src.visualization import visualize
 
-def main(metadata_path, repos_path, interim_path, processed_path, models_path):
+def main(metadata_path,
+         repos_path,
+         interim_path,
+         processed_path,
+         models_path,
+         visualizations_path):
     
     """Runs everything, and skips steps already done."""
     
@@ -81,6 +87,13 @@ def main(metadata_path, repos_path, interim_path, processed_path, models_path):
         logging.info("Starting train.py.")
         train.main(processed_path, models_path)
         logging.info("Finished train.py.")
+    
+    # create visualizations
+    if not os.path.isfile(os.path.join(visualizations_path,
+                                       'ElasticNetCV_MSE.png')):
+        logging.info("Starting visualize.py.")
+        visualize.main(processed_path, models_path, visualizations_path)
+        logging.info("Finished visualize.py.")
 
 if __name__ == '__main__':
     
@@ -116,6 +129,10 @@ if __name__ == '__main__':
             '--models_path',
             default = "models",
             help = "path to the trained models (default: models)")
+    parser.add_argument(
+            '--visualizations_path',
+            default = "visualizations",
+            help = "path to the visualizations (default: visualizations)")
     args = parser.parse_args()
     
     # run main
@@ -123,4 +140,5 @@ if __name__ == '__main__':
          args.repos_path,
          args.interim_path,
          args.processed_path,
-         args.models_path)
+         args.models_path,
+         args.visualizations_path)

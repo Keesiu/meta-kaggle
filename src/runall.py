@@ -99,7 +99,7 @@ if __name__ == '__main__':
     
     # configure logging
     logging.basicConfig(
-        level = logging.DEBUG,
+        level = logging.INFO,
         format = "%(asctime)s %(name)-20s %(levelname)-8s %(message)s",
         filename = "logs/runall.log",
         datefmt = "%a, %d %b %Y %H:%M:%S")

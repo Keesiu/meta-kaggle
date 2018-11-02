@@ -3,7 +3,12 @@
 import os, shutil, argparse
 
 
-def main(repos_path, interim_path, processed_path, logs_path, models_path):
+def main(repos_path,
+         interim_path,
+         processed_path,
+         logs_path,
+         models_path,
+         visualizations_path):
     
     """Resets project for clean re-run."""
     
@@ -37,6 +42,11 @@ def main(repos_path, interim_path, processed_path, logs_path, models_path):
     for file in os.listdir(models_path):
         if file[-4:] == '.pkl' or file[-4:] == '.txt':
             os.remove(os.path.join(models_path, file))
+    
+    # delete all png-files in models
+    for file in os.listdir(visualizations_path):
+        if file[-4:] == '.png':
+            os.remove(os.path.join(visualizations_path, file))
 
 if __name__ == '__main__':
     
@@ -64,6 +74,10 @@ if __name__ == '__main__':
             '--models_path',
             default = "models",
             help = "path to the trained models (default: models)")
+    parser.add_argument(
+            '--visualizations_path',
+            default = "visualizations",
+            help = "path to the visualizations (default: visualizations)")
     args = parser.parse_args()
     
     # run main
@@ -71,4 +85,5 @@ if __name__ == '__main__':
          args.interim_path,
          args.processed_path,
          args.logs_path,
-         args.models_path)
+         args.models_path,
+         args.visualizations_path)

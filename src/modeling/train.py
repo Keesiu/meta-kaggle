@@ -120,7 +120,7 @@ def main(processed_path = "data/processed",
     best_l1_ratio = mod.l1_ratio_
     logger.info("best l1_ratio: {}".format(best_l1_ratio))
     best_alpha = mod.alpha_
-    logger.info("best alpha: {:.5f}".format(best_alpha))
+    logger.info("best alpha: {:.3f}".format(best_alpha))
     alphas = mod.alphas_
     logger.debug("tested alphas:\n{}".format(alphas))
     coef = pd.Series(data=mod.coef_, index=X_columns)

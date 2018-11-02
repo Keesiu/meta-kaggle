@@ -147,15 +147,16 @@ def main(processed_path = "data/processed",
 
     #%% plot ElasticNetCV results
     
-    # need to fix l1_ratio from list to best_l1_ratio
+    # need to refit model with fixed l1_ratio (to best l1_ratio)
     # in order to visualize correctly
     mod.set_params(l1_ratio=mod.l1_ratio_)
+    mod.fit(X.values, y.values)
     
     # print MSE's across folds
-    m_log_alphas = mod.alphas_
+    alphas = mod.alphas_
     fig = plt.figure()
-    plt.plot(m_log_alphas, mod.mse_path_, ':')
-    plt.plot(m_log_alphas, mod.mse_path_.mean(axis=-1), 'b',
+    plt.plot(alphas, mod.mse_path_, ':')
+    plt.plot(alphas, mod.mse_path_.mean(axis=-1), 'b',
                    label='Average over the folds')
     plt.axvline(mod.alpha_, linestyle='--', color='k',
                       label="$\\alpha={:0.3f}$".format(mod.alpha_))

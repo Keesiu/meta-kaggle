@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib import rcParams
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
+from yellowbrick.regressor import AlphaSelection
 
 def main(processed_path = "data/processed",
          models_path = "models",
@@ -139,42 +140,51 @@ def main(processed_path = "data/processed",
     
     #%% residual plot
     f, ax = plt.subplots(figsize=(5, 5))
-    fig = sns.residplot(x=mod_sm.fittedvalues, y=y, data=X)
-    fig.get_figure().savefig(
-            os.path.join(visualizations_path,
-                         'residplot.png'), dpi=300)
+    fig = sns.residplot(x=mod_sm.fittedvalues, y=y, data=X).get_figure()
+    fig.savefig(os.path.join(visualizations_path, 'residplot.png'), dpi=300)
+    fig.clear()
+    plt.close()
+
+    #%% plot ElasticNetCV results
+    
+    # need to fix l1_ratio from list to best_l1_ratio
+    # in order to visualize correctly
+    mod.set_params(l1_ratio=mod.l1_ratio_)
+    
+    # print MSE's across folds
+    m_log_alphas = mod.alphas_
+    fig = plt.figure()
+    plt.plot(m_log_alphas, mod.mse_path_, ':')
+    plt.plot(m_log_alphas, mod.mse_path_.mean(axis=-1), 'b',
+                   label='Average over the folds')
+    plt.axvline(mod.alpha_, linestyle='--', color='k',
+                      label="$\\alpha={:0.3f}$".format(mod.alpha_))
+    plt.legend()
+    plt.xlabel('alpha')
+    plt.ylabel('error (or score)')
+    plt.title('ElasticNetCV Alpha Error (per CV-fold)')
+    plt.axis('tight')
+    fig.savefig(os.path.join(visualizations_path,
+                             'ElasticNetCV_MSE_per_fold.png'), dpi=300)
     fig.clear()
     plt.close()
     
-    #%% plot regression model
-#    sns.regplot(x=X.loc_max_log, y=y, data=X)
-#    
-#
-#
-##%% plot ElasticNetCV results
-#
-#    mse_path = pd.DataFrame(data=mod.mse_path_, index=ALPHAS)
-#    logger.info("Lasso MSE = {}.".format(mse_path))
-#    # Display results
-#    m_log_alphas = -np.log(mod.alphas_)/np.log(BASE)
-#    plt.figure(figsize=(10,8))
-#    ymin, ymax = 0, 1000
-#    plt.plot(m_log_alphas, mod.mse_path_, ':')
-#    plt.plot(m_log_alphas, mod.mse_path_.mean(axis=-1), 'k',
-#             label='Average across the folds', linewidth=2)
-#    plt.axvline(-np.log10(mod.alpha_), linestyle='--', color='k',
-#                label='alpha: CV estimate')
-#    plt.legend()
-#    plt.xlabel('-log(alpha)')
-#    plt.ylabel('Mean square error')
-#    plt.title('Mean square error on each fold')
-#    plt.axis('tight')
-#    plt.ylim(ymin, ymax)
-#    plt.show()
-#    
-#    #%% pairplot
-#    sns.pairplot(yX)
+    # print R^2 errors (minimization equivalent to MSE)
+    visualizer = AlphaSelection(mod)
+    visualizer.fit(X, y)
+    visualizer.poof(outpath=os.path.join(visualizations_path,
+                                         'ElasticNetCV_MSE.png'), dpi=300)
+    plt.close()
     
+    #%% pairplot not performed since too big
+    
+#    X_used = X.loc[:, mod.coef_ != 0]
+#    fig = sns.pairplot(pd.concat([y, X_used], axis=1), kind='reg')
+#    fig.savefig(os.path.join(visualizations_path,
+#                             'pairplot.png'), dpi=100)
+#    fig.clear()
+#    plt.close()
+        
     #%% logging time passed
     end = time()
     time_passed = pd.Timedelta(seconds=end-start).round(freq='s')

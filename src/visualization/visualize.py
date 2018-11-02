@@ -40,23 +40,29 @@ def main(processed_path = "data/processed",
     # load models
     mod = pickle.load(open(
             os.path.join(models_path, 'sklearn_ElasticNetCV.pkl'), 'rb'))
+    logger.info("Loaded sklearn_ElasticNetCV.pkl.")
     mod_sm = pickle.load(open(
             os.path.join(models_path, 'sm_OLS_fit_regularized.pkl'), 'rb'))
-
+    logger.info("Loaded sm_OLS_fit_regularized.")
+    
     #%% split selected_df into dependent and independent variables
     teams_df = selected_df.iloc[:, :9]
     y = selected_df.iloc[:, 9:10]
     X = selected_df.iloc[:, 10:]
     yX = pd.concat([y, X], axis=1)
+    logger.debug("Splitted selected_df to teams_df, y, X and yX.")
     
     #%% start visualization
     
     start = time()
     sns.set_context('paper')
+    logger.debug("Set seaborn context to 'paper'.")
     rcParams.update({'figure.autolayout': True})
+    logger.debug("Set figure.autoLayout to True.")
     
     #%% correlation coefficient matrix
     
+    logger.info("Start visualizing correlation_coefficient_matrix.png.")
     corr = yX.corr()
     # Generate a mask for the upper triangle
     mask = np.zeros_like(corr, dtype=np.bool)
@@ -73,11 +79,14 @@ def main(processed_path = "data/processed",
                              'correlation_coefficient_matrix.png'), dpi=300)
     fig.clear()
     plt.close()
+    logger.info("Finished visualizing correlation_coefficient_matrix.png.")
     
     #%% histograms of transformation
     
     sns.set_style("darkgrid")
+    logger.debug("Set seaborn_style to darkgrid.")
     
+    logger.info("Start visualizing histograms.")
     # histogram of ranking
     fig = sns.distplot(teams_df.Ranking, rug=True,
                        axlabel='ranking').get_figure()
@@ -108,9 +117,11 @@ def main(processed_path = "data/processed",
                          'histogram_loc_max_log.png'), dpi=300)
     fig.clear()
     plt.close()
+    logger.info("Finished visualizing histograms.")
     
     #%% standardize
     
+    logger.info("Start standardizing X.")
     scaler = StandardScaler()
     not_standardize = ['core',
                        'visualization',
@@ -127,9 +138,10 @@ def main(processed_path = "data/processed",
     logger.debug("After Standardization:\n{}".format(X.describe().to_string))
     # update yX
     yX = pd.concat([y, X], axis=1)
+    logger.info("Finished standardizing X.")
     
     #%% boxplot
-    
+    logger.info("Start visualizing boxplot.png.")
     f, ax = plt.subplots(figsize=(12, 8))
     fig = sns.boxplot(data=yX)
     fig.set_xticklabels(fig.get_xticklabels(), rotation=270)
@@ -137,22 +149,28 @@ def main(processed_path = "data/processed",
                                           'boxplot.png'), dpi=300)
     fig.clear()
     plt.close()
+    logger.info("Finished visualizing boxplot.png.")
     
     #%% residual plot
+    logger.info("Start visualizing residplot.png.")
     f, ax = plt.subplots(figsize=(5, 5))
     fig = sns.residplot(x=mod_sm.fittedvalues, y=y, data=X).get_figure()
     fig.savefig(os.path.join(visualizations_path, 'residplot.png'), dpi=300)
     fig.clear()
     plt.close()
+    logger.info("Finished visualizing residplot.png.")
 
     #%% plot ElasticNetCV results
     
     # need to refit model with fixed l1_ratio (to best l1_ratio)
     # in order to visualize correctly
     mod.set_params(l1_ratio=mod.l1_ratio_)
+    logger.info("Fixed l1_ratio to {}".format(mod.l1_ratio_))
     mod.fit(X.values, y.values)
+    logger.info("Refitted ElaticNetCV model.")
     
     # print MSE's across folds
+    logger.info("Start visualizing ElasticNetCV_MSE_per_fold.png.")
     alphas = mod.alphas_
     fig = plt.figure()
     plt.plot(alphas, mod.mse_path_, ':')
@@ -169,13 +187,16 @@ def main(processed_path = "data/processed",
                              'ElasticNetCV_MSE_per_fold.png'), dpi=300)
     fig.clear()
     plt.close()
+    logger.info("Finished visualizing ElasticNetCV_MSE_per_fold.png.")
     
     # print R^2 errors (minimization equivalent to MSE)
+    logger.info("Start visualizing ElasticNetCV_MSE.png.")
     visualizer = AlphaSelection(mod)
     visualizer.fit(X, y)
     visualizer.poof(outpath=os.path.join(visualizations_path,
                                          'ElasticNetCV_MSE.png'), dpi=300)
     plt.close()
+    logger.info("Finished visualizing ElasticNetCV_MSE.png.")
     
     #%% pairplot not performed since too big
     

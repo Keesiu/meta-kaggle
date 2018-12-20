@@ -46,6 +46,8 @@ def main(metadata_path,
         logging.info("Finished reduce.py.")
     
     # translates the external Python scripts from version 2.x to 3.x
+    if not os.path.exists(repos_path + '_2to3'):
+        os.mkdir(repos_path + '_2to3')
     if not os.listdir(repos_path) == os.listdir(repos_path + '_2to3'):
         logging.info("Starting translate2to3.py.")
         translate2to3.main(repos_path)
